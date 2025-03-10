@@ -82,6 +82,7 @@
           "${workspaceFolder:backend}/api"
       ],
       "python.analysis.autoSearchPaths": true,
+      //hola 
     },
     "extensions": {
       "recommendations": [
