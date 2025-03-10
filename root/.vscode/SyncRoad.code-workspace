@@ -1,0 +1,108 @@
+{
+    "folders": [
+      {
+        "name": "root",
+        "path": "../"
+      },
+      {
+        "path": "../backend",
+        "name": "backend"
+      },
+      {
+        "path": "../frontend",
+        "name": "frontend"
+      }
+    ],
+    "settings": {
+      // For the root folder:
+      "files.exclude": {
+        "node_modules/": true,
+        "backend/": true,
+        "frontend/": true,
+        "**/.cache": true,
+        "**/.next": true,
+        "**/.pytest_cache": true,
+        "**/__pycache__": true,
+        "**/.mypy_cache": true
+      },
+      "search.exclude": {
+        "**/.git": true,
+        "**/node_modules": true,
+        "**/.cache": true,
+        "**/.pytest_cache": true,
+        "poetry.lock": true,
+        ".cache/": true,
+        "**/*.sql": true,
+        "**/bower_components": true,
+        "**/.next": true,
+        "**/__pycache__": true,
+        "**/.vite": true,
+        "**/tmp": true
+      },
+      // For the backend folder:
+      "editor.tabSize": 2, // default
+      "editor.formatOnSave": true,
+      "[python]": {
+        "editor.tabSize": 4,
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.codeActionsOnSave": {
+          "source.fixAll": "explicit"
+        }
+      },
+      "[html]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+      },
+      "[javascript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+      },
+      "[javascriptreact]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+      },
+      "[typescriptreact]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+      },
+      "black-formatter.args": ["--line-length", "79", "--preview"],
+      "editor.rulers": [79],
+      "vim.hlsearch": true,
+      "python.languageServer": "Pylance",
+      "python.analysis.typeCheckingMode": "standard",
+      "python.analysis.useLibraryCodeForTypes": true,
+      "python.analysis.diagnosticMode": "openFilesOnly",
+      "python.analysis.logLevel": "Information",
+      "python.analysis.diagnosticSeverityOverrides": {
+        "reportIncompatibleVariableOverride": "none"
+      },
+      "python.analysis.extraPaths": [
+          "${workspaceFolder:backend}/api"
+      ],
+      "python.autoComplete.extraPaths": [
+          "${workspaceFolder:backend}/api"
+      ],
+      "python.analysis.autoSearchPaths": true,
+    },
+    "extensions": {
+      "recommendations": [
+        "tamasfe.even-better-toml",
+        "foxundermoon.shell-format",
+        "streetsidesoftware.code-spell-checker",
+        "mikestead.dotenv",
+        "donjayamanne.githistory",
+        // Python things:
+        "ms-python.black-formatter",
+        //"ms-python.vscode-pylance",
+        "ms-python.pylint",
+        // We can't use ruff linter since it doesn't support django stubs
+        //"charliermarsh.ruff",
+        "ms-python.python",
+        "mechatroner.rainbow-csv",
+        // FE Things:
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "vscode-icons-team.vscode-icons"
+      ]
+    }
+  }
+  
