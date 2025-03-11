@@ -1,7 +1,7 @@
 # Project Variables
 DOCKER_COMPOSE_DEV=docker-compose-dev.yml
-BACKEND_CONTAINER=fastapi_backend
-FRONTEND_CONTAINER=react_native_frontend
+BACKEND_CONTAINER=syncroad_backend
+FRONTEND_CONTAINER=syncroad_frontend
 
 # Start everything
 start-dev:

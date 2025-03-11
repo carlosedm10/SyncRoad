@@ -1,40 +1,58 @@
-version: "3.8"
-
 services:
+  database:
+    container_name: "syncroad-database"
+    hostname: database
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - backend/postgres.env
+    ports:
+      - "5432:5432"
+    networks:
+      - appnet  # Attach to the custom network
+    command: [ "postgres", "-c", "log_statement=all" ] # Debugging
+
+
   backend:
+    container_name: "syncroad_backend"
+    hostname: backend
     build:
       context: ./backend
       dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
     volumes:
       - ./backend:/app
-    env_file:
-      - ./backend/.env
+    # env_file:
+    #   - ./backend/.env # Uncomment if you have a .env file, maybe later for api keys
+    # Terminal
+    stdin_open: true 
+    tty: true 
     depends_on:
       - database
+    ports:
+      - "8000:8000"
+    networks:
+      - appnet  # Attach to the custom network
+    command: python -u api/manage.py runserver 0.0.0.0:8000
+
 
   frontend:
+    container_name: "syncroad_frontend"
+    restart: "unless-stopped"
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    ports:
-      - "8000:8000" # Metro Bundler port
     volumes:
       - ./frontend:/app
       - /app/node_modules # Prevents overwriting node_modules
-    stdin_open: true
-    tty: true
-
-  database:
-    image: postgres:15
-    restart: always
-    env_file:
-      - ./database/.env
     ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - "8081:8081" # Metro Bundler port
+    networks:
+      - appnet  # Attach to the custom network
 
 volumes:
   postgres_data:
+
+networks:
+  appnet:
+    name: syncroad-network 
