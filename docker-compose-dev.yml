@@ -1,6 +1,6 @@
 services:
   database:
-    container_name: "syncroad-database"
+    container_name: "syncroad_database"
     hostname: database
     image: postgres:15
     volumes:
