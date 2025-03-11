@@ -9,18 +9,8 @@ start-dev:
 	@echo "Backend is running at http://localhost:8000"
 	@echo "Frontend (Metro) is running at http://localhost:8081"
 
-# Start the frontend only
-start-dev-fe:
-	docker compose -f $(DOCKER_COMPOSE_DEV) up -d --force-recreate frontend
-	@echo "Frontend (Metro) is running at http://localhost:8081"
-
-# Stop everything
 stop-dev:
 	docker compose -f $(DOCKER_COMPOSE_DEV) down
-
-# Stop only the frontend
-stop-dev-fe:
-	docker compose -f $(DOCKER_COMPOSE_DEV) stop frontend
 
 # Format backend code
 format-backend:
