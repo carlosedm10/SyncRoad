@@ -64,6 +64,10 @@
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.formatOnSave": true
       },
+      "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+      },
       "black-formatter.args": ["--line-length", "79", "--preview"],
       "editor.rulers": [79],
       "vim.hlsearch": true,
