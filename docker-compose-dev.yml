@@ -54,4 +54,4 @@ volumes:
 
 networks:
   appnet:
-    name: syncroad-network 
+    name: syncroad_network 

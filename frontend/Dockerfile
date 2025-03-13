@@ -5,9 +5,8 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Copy package.json and install dependencies
-COPY package.json ./
-RUN yarn install --frozen-lockfile
-
+COPY package.json package-lock.json ./
+RUN npm ci
 # Copy the rest of the app files
 COPY . .
 
@@ -15,4 +14,4 @@ COPY . .
 EXPOSE 8081
 
 # Start the Metro Bundler for React Native development
-CMD ["yarn", "start"]
+CMD ["npm", "start"]
