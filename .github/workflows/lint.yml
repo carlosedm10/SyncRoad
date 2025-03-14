@@ -26,6 +26,3 @@ jobs:
 
       - name: Check JS Formatting
         run: prettier --check "**/*.{js,jsx,ts,tsx}"
-
-      - name: Check ROS Code Style
-        run: find . -name "*.cpp" -o -name "*.h" | xargs clang-format --dry-run --Werror

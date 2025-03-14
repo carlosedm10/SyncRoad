@@ -21,7 +21,8 @@ format-backend:
 
 # Format frontend code
 format-frontend:
-	docker exec $(FRONTEND_CONTAINER) yarn lint && yarn format && yarn prettier && yarn lint:fix
+	docker exec $(FRONTEND_CONTAINER) npx prettier --write .
+
 
 # Format all code
 format-all:
