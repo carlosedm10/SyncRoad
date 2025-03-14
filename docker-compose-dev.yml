@@ -46,6 +46,8 @@ services:
       - /app/node_modules # Prevents overwriting node_modules
     ports:
       - "8081:8081" # Metro Bundler port
+    environment:
+      - NODE_ENV=development
     networks:
       - appnet  # Attach to the custom network
 
