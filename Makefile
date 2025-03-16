@@ -29,6 +29,10 @@ format-all:
 	make format-backend
 	make format-frontend
 
+# For accesing the backend container shell
+connect-to-backend:
+	docker exec -it $(BACKEND_CONTAINER) /bin/bash
+
 # TODO: Add tests
 # # Run backend tests
 # test:

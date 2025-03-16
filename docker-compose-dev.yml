@@ -13,6 +13,12 @@ services:
       - appnet  # Attach to the custom network
     command: [ "postgres", "-c", "log_statement=all" ] # Debugging
 
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+
 
   backend:
     container_name: "syncroad_backend"
