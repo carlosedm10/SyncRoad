@@ -10,6 +10,6 @@ def read_root():
     return {"Hello": "World"}
 
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
+@app.get("/user/{user_id}")
+def get_or_create_user(user_id: str) -> Union[str, dict]:
+    return {"user_id": user_id}
