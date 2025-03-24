@@ -1,6 +1,6 @@
 # main.py
-from api.Users.utils import hash_password
-from api.Users.models import Base, engine, User, get_db
+from api.Authentification.utils import hash_password
+from api.Authentification.models import Base, engine, User, get_db
 
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -17,10 +17,10 @@ def read_root():
     return {"Hello": "World"}
 
 
-@app.get("/get_user/{user_id}")
-def get_user(user_id: int, db: Session = Depends(get_db)):
+@app.get("/get_user/{user_email}")
+def get_user(user_email: str, db: Session = Depends(get_db)):
     try:
-        user = db.query(User).filter(User.user_id == user_id).first()
+        user = db.query(User).filter(User.email == user_email).first()
         return user
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -28,13 +28,16 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
 
 @app.post("/create_user/")
 def create_user(user_data: dict, db: Session = Depends(get_db)):
+    # Check if email is already in use
+    existing_user = (
+        db.query(User).filter(User.email == user_data["email"]).first()
+    )
+    # NOTE: fix this rasinging error
+    if existing_user:
+        return HTTPException(
+            status_code=400, detail="Email already registered"
+        )
     try:
-        # Check if email is already in use
-        existing_user = db.query(User).filter(User.email == user_data["email"]).first()
-        # NOTE: fix this rasinging error
-        if existing_user:
-            return HTTPException(status_code=400, detail="Email already registered")
-
         # Create new user instance
         new_user = User(
             name=user_data["name"],
@@ -45,9 +48,6 @@ def create_user(user_data: dict, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(new_user)
         return new_user
-    # except IntegrityError:
-    #     db.rollback()
-    #     raise HTTPException(status_code=400, detail="Email already registered")
     except Exception as e:
         db.rollback()  # Rollback in case of any errors
         raise HTTPException(status_code=500, detail=str(e))
