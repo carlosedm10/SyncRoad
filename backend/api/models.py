@@ -1,6 +1,6 @@
 # models.py
 import os
-from sqlalchemy import Column, String, create_engine
+from sqlalchemy import Column, String, Integer, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker
 DATABASE_URL = (
     f"postgresql://{os.getenv('POSTGRES_USER', 'syncroad')}:"
     f"{os.getenv('POSTGRES_PASSWORD', 'syncroad')}@"
-    f"{os.getenv('DATABASE_HOST', 'syncroad-posgres')}/"
+    f"{os.getenv('DATABASE_HOST', 'syncroad_database')}/"
     f"{os.getenv('POSTGRES_DB', 'syncroad')}"
 )
 
@@ -33,9 +33,11 @@ class Company(Base):
 # Define the User model
 class User(Base):
     __tablename__ = "users"
-    user_id = Column(String, primary_key=True, index=True)
+    user_id = Column(
+        Integer, primary_key=True, autoincrement=True, unique=True
+    )
     name = Column(String, index=True)
-    email = Column(String, index=True)
+    email = Column(String, index=True, unique=True)
     password = Column(String)
 
 

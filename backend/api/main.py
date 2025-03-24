@@ -1,7 +1,7 @@
 # main.py
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
-from models import Base, engine, User, get_db
+from api.models import Base, engine, User, get_db
 
 # Create the database tables if they don't already exist
 Base.metadata.create_all(bind=engine)
@@ -9,25 +9,28 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
 
-def get_or_create_user(db: Session, user_id: str) -> User:
-    user = db.query(User).filter(User.user_id == user_id).first()
-    if not user:
-        user = User(user_id=user_id)
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-    return user
-
-
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
 
 
-@app.get("/user/{user_id}")
-def read_user(user_id: str, db: Session = Depends(get_db)):
+@app.get("/get_user/{user_email}")
+def get_user(user_email: str, db: Session = Depends(get_db)):
     try:
-        user = get_or_create_user(db, user_id)
-        return user
+        user = db.query(User).filter(User.email == user_email).first()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+
+@app.post("/create_user/")
+def create_user(user_data: list, db: Session = Depends(get_db)):
+    name, email, password = user_data
+    already_existing_user = db.query(User).filter(User.email == email).first()
+    if already_existing_user:
+        raise HTTPException(status_code=409, detail="User already exists")
+    new_user = User(name=name, email=email, password=password)
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
