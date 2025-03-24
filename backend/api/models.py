@@ -34,11 +34,16 @@ class Company(Base):
 class User(Base):
     __tablename__ = "users"
     user_id = Column(
-        Integer, primary_key=True, autoincrement=True, unique=True
+        Integer,
+        primary_key=True,
+        index=True,
+        nullable=False,
+        autoincrement=True,
+        unique=True,
     )
     name = Column(String, index=True)
-    email = Column(String, index=True, unique=True)
-    password = Column(String)
+    email = Column(String, index=True, unique=True, nullable=False)
+    password = Column(String, nullable=False)
 
 
 # Dependency for FastAPI to get a database session per request

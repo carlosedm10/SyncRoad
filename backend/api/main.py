@@ -29,8 +29,12 @@ def create_user(user_data: list, db: Session = Depends(get_db)):
     already_existing_user = db.query(User).filter(User.email == email).first()
     if already_existing_user:
         raise HTTPException(status_code=409, detail="User already exists")
-    new_user = User(name=name, email=email, password=password)
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    try:
+        new_user = User(name=name, email=email, password=password)
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
     return new_user
