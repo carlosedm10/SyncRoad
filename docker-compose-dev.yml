@@ -1,6 +1,6 @@
 services:
   database:
-    container_name: "syncroad_database"
+    container_name: "syncroad_postgres"
     hostname: database
     image: postgres:15
     volumes:
@@ -22,6 +22,7 @@ services:
 
   backend:
     container_name: "syncroad_backend"
+    restart: "unless-stopped"
     hostname: backend
     build:
       context: ./backend

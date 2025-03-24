@@ -1,6 +1,6 @@
 # Project Variables
 DOCKER_COMPOSE_DEV=docker-compose-dev.yml
-DATABASE_CONTAINER=syncroad_database
+DATABASE_CONTAINER=syncroad_postgres
 BACKEND_CONTAINER=syncroad_backend
 FRONTEND_CONTAINER=syncroad_frontend
 

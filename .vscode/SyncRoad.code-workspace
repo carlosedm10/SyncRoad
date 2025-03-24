@@ -80,10 +80,10 @@
         "reportIncompatibleVariableOverride": "none"
       },
       "python.analysis.extraPaths": [
-          "${workspaceFolder:backend}/api"
+          "${workspaceFolder:backend}"
       ],
       "python.autoComplete.extraPaths": [
-          "${workspaceFolder:backend}/api"
+          "${workspaceFolder:backend}"
       ],
       "python.analysis.autoSearchPaths": true,
       //hola 
