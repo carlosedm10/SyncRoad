@@ -1,37 +1,60 @@
 # Project Variables
 DOCKER_COMPOSE_DEV=docker-compose-dev.yml
+DATABASE_CONTAINER=syncroad_database
 BACKEND_CONTAINER=syncroad_backend
 FRONTEND_CONTAINER=syncroad_frontend
 
-# Start everything
+
+# ------------------------------ Setup ------------------------------ #
+
+build:
+	docker compose -f $(DOCKER_COMPOSE_DEV) up -d  --force-recreate --build
+	@echo "Backend is running at http://localhost:8000"
+	@echo "Frontend (Metro) is running at http://localhost:8081"
+
 start:
 	docker compose -f $(DOCKER_COMPOSE_DEV) up -d --force-recreate
 	@echo "Backend is running at http://localhost:8000"
 	@echo "Frontend (Metro) is running at http://localhost:8081"
 
-build:
-	docker compose -f $(DOCKER_COMPOSE_DEV) up -d  --force-recreate --build
-
 stop:
 	docker compose -f $(DOCKER_COMPOSE_DEV) down
 
-# Format backend code
+# ----------------------------- Terminals ----------------------------- #
+
+connect-to-database:
+	docker exec -it $(DATABASE_CONTAINER) psql -U syncroad -d syncroad
+
+connect-to-backend:
+	docker exec -it $(BACKEND_CONTAINER) /bin/bash
+
+connect-to-frontend:
+	docker exec -it $(FRONTEND_CONTAINER) bash
+
+# ----------------------------- Debugging ----------------------------- #
+
+show-database-logs:
+	docker logs -n 100 -f $(DATABASE_CONTAINER)
+
+show-backend-logs:
+	docker logs -f $(BACKEND_CONTAINER)
+
+show-frontend-logs:
+	docker logs -f $(FRONTEND_CONTAINER)
+
+# ----------------------------- Linting ----------------------------- #
+
 format-backend:
 	docker exec $(BACKEND_CONTAINER) poetry run black api/
 
-# Format frontend code
 format-frontend:
 	docker exec $(FRONTEND_CONTAINER) npx prettier --write .
-
 
 # Format all code
 format-all:
 	make format-backend
 	make format-frontend
 
-# For accesing the backend container shell
-connect-to-backend:
-	docker exec -it $(BACKEND_CONTAINER) /bin/bash
 
 # TODO: Add tests
 # # Run backend tests
