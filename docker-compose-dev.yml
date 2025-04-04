@@ -54,6 +54,8 @@ services:
       - "8081:8081" # Metro Bundler port
     environment:
       - NODE_ENV=development
+      - WATCHPACK_POLLING=true
+
     networks:
       - appnet  # Attach to the custom network
 
