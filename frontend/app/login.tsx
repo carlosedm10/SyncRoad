@@ -6,22 +6,31 @@ import {
   Button,
   StyleSheet,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { router } from "expo-router";
+import { loginUser } from "./routing";
+import { User } from "./types";
 
 export default function LoginScreen() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
-  const fakeUser = "hola";
-  const fakePass = "hola";
 
-  const handleLogin = () => {
-    if (username == fakeUser && password == fakePass) {
-      console.log("Inicio de sesión exitoso");
-      router.replace("./login");
+  const handleLogin = async () => {
+    // Construct the user object
+    const user: User = { email, password };
+
+    // Call the login API
+    const result = await loginUser(user);
+
+    if (result.success) {
+      console.log("Login successful, user id:", result.userId);
+      // Replace with your route (e.g., home screen)
+      router.replace("http://localhost:8081");
     } else {
-      console.log("Por favor ingrese las credenciales");
+      // Show error alert
+      Alert.alert("Login Failed", result.error || "An error occurred");
     }
   };
 
@@ -31,9 +40,11 @@ export default function LoginScreen() {
 
       <TextInput
         style={styles.input}
-        placeholder="Username"
-        value={username}
-        onChangeText={setUsername}
+        placeholder="Email"
+        autoCapitalize="none"
+        keyboardType="email-address"
+        value={email}
+        onChangeText={setEmail}
       />
 
       <TextInput
@@ -52,6 +63,7 @@ export default function LoginScreen() {
       </View>
 
       <Button title="Sign In" onPress={handleLogin} />
+
       <TouchableOpacity style={styles.forgotPassword}>
         <Text style={styles.forgotPasswordText}>Forgot password?</Text>
       </TouchableOpacity>
@@ -73,7 +85,7 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   input: {
-    width: "100%",
+    width: "50%",
     height: 50,
     borderColor: "#ccc",
     borderWidth: 1,
