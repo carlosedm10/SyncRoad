@@ -3,6 +3,7 @@ import os
 from sqlalchemy import Column, String, Integer, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from pydantic import BaseModel
 
 # Construct the database URL from environment variables
 DATABASE_URL = (
@@ -22,12 +23,10 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
-class Company(Base):
-    __tablename__ = "companies"
-    company_id = Column(String, primary_key=True, index=True)
-    name = Column(String, index=True)
-    email = Column(String, index=True)
-    password = Column(String)
+# Pydantic models for incoming request bodies
+class UserCredentials(BaseModel):
+    email: str
+    password: str
 
 
 # Define the User model
@@ -41,7 +40,6 @@ class User(Base):
         autoincrement=True,
         unique=True,
     )
-    name = Column(String, index=True)
     email = Column(String, index=True, unique=True, nullable=False)
     password = Column(String, nullable=False)
 
