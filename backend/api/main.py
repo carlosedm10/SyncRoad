@@ -20,7 +20,7 @@ def read_root():
 
 # Endpoint to log in the user
 @app.post("/login")
-def login(user_data: User, db: Session = Depends(get_db)):
+def login(user_data: UserCredentials, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == user_data.email).first()
     if not user:
         raise HTTPException(
@@ -33,7 +33,7 @@ def login(user_data: User, db: Session = Depends(get_db)):
 
 # Endpoint to create a new user
 @app.post("/create-user")
-def create_user(user_data: User, db: Session = Depends(get_db)):
+def create_user(user_data: UserCredentials, db: Session = Depends(get_db)):
     already_existing_user = (
         db.query(User).filter(User.email == user_data.email).first()
     )
