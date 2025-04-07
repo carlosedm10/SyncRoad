@@ -24,7 +24,9 @@ app.add_middleware(
 
 @app.get("/")
 def read_root():
-    return "Hello, there is nothing intereseting here. VISIT: http://localhost:8000/docs"
+    return (
+        "Hello, there is nothing intereseting here. VISIT: http://localhost:8000/docs"
+    )
 
 
 # Endpoint to log in the user
@@ -33,9 +35,7 @@ def login(user_data: UserCredentials, db: Session = Depends(get_db)):
     print(user_data)
     user = db.query(User).filter(User.email == user_data.email).first()
     if not user:
-        raise HTTPException(
-            status_code=404, detail="User not found. Please sign up."
-        )
+        raise HTTPException(status_code=404, detail="User not found. Please sign up.")
     if not pwd_context.verify(user_data.password, user.password):
         raise HTTPException(status_code=401, detail="Incorrect password")
     return {True}
@@ -44,9 +44,7 @@ def login(user_data: UserCredentials, db: Session = Depends(get_db)):
 # Endpoint to create a new user
 @app.post("/create-user")
 def create_user(user_data: UserCredentials, db: Session = Depends(get_db)):
-    already_existing_user = (
-        db.query(User).filter(User.email == user_data.email).first()
-    )
+    already_existing_user = db.query(User).filter(User.email == user_data.email).first()
     if already_existing_user:
         raise HTTPException(status_code=409, detail="User already exists")
     try:
