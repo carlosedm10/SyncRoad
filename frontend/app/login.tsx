@@ -7,18 +7,19 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
+import { router } from "expo-router";
 
-const LoginScreen = ({ navigation }) => {
+export default function LoginScreen() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const fakeUser= "hola"
+  const fakePass="hola"
 
   const handleLogin = () => {
-    // Lógica de inicio de sesión
-    if (username && password) {
+    if (username == fakeUser && password==fakePass) {
       console.log("Inicio de sesión exitoso");
-      // Navegar a la siguiente pantalla (por ejemplo, ExploreScreen)
-      navigation.navigate("Explore");
+      router.replace("/(tabs)");
     } else {
       console.log("Por favor ingrese las credenciales");
     }
@@ -56,7 +57,7 @@ const LoginScreen = ({ navigation }) => {
       </TouchableOpacity>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -108,5 +109,3 @@ const styles = StyleSheet.create({
     color: "#4A90E2",
   },
 });
-
-export default LoginScreen;
