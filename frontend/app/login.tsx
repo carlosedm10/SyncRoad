@@ -13,13 +13,13 @@ export default function LoginScreen() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
-  const fakeUser= "hola"
-  const fakePass="hola"
+  const fakeUser = "hola";
+  const fakePass = "hola";
 
   const handleLogin = () => {
-    if (username == fakeUser && password==fakePass) {
+    if (username == fakeUser && password == fakePass) {
       console.log("Inicio de sesión exitoso");
-      router.replace("/(tabs)");
+      router.replace("./login");
     } else {
       console.log("Por favor ingrese las credenciales");
     }

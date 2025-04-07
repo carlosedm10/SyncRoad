@@ -7,10 +7,9 @@ export default function RootLayout() {
 
   const isLoggedIn = true; // Cambia a true cuando simules login
 
-  // // Corrige la ruta sin paréntesis
-  // if (!isLoggedIn && pathname !== "/login") {
-  //   return <Redirect href="/login" />;
-  // }
+  if (pathname == "/login") {
+    return <LoginScreen />;
+  }
 
   return <HomeScreen />;
 }
