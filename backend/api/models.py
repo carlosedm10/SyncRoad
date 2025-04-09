@@ -1,6 +1,6 @@
 # models.py
 import os
-from sqlalchemy import Column, String, Integer, create_engine
+from sqlalchemy import Column, String, Integer, create_engine, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from pydantic import BaseModel
@@ -29,6 +29,12 @@ class UserCredentials(BaseModel):
     password: str
 
 
+class DriverData(BaseModel):
+    user_id: int
+    driver = bool
+    linked = bool
+
+
 # Define the User model
 class User(Base):
     __tablename__ = "users"
@@ -42,6 +48,8 @@ class User(Base):
     )
     email = Column(String, index=True, unique=True, nullable=False)
     password = Column(String, nullable=False)
+    driver = Column(Boolean, default=False)
+    linked = Column(Boolean, default=False)
 
 
 # Dependency for FastAPI to get a database session per request
