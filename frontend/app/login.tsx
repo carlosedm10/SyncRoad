@@ -6,7 +6,6 @@ import {
   Button,
   StyleSheet,
   TouchableOpacity,
-  Alert,
 } from "react-native";
 import { router } from "expo-router";
 import { loginUser } from "./routing";
@@ -16,27 +15,27 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState("");
 
   const handleLogin = async () => {
-    // Construct the user object
     const user: User = { email, password };
-
-    // Call the login API
     const result = await loginUser(user);
 
     if (result.success) {
       console.log("Login successful, user id:", result.userId);
-      // Replace with your route (e.g., home screen)
       router.replace("http://localhost:8081");
     } else {
-      // Show error alert
-      Alert.alert("Login Failed", result.error || "An error occurred");
+      setError(result.error || "Login failed. Please try again.");
     }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Welcome Back!</Text>
+
+      <TouchableOpacity style={styles.forgotPassword}>
+        {error && <Text style={styles.forgotPasswordText}>{error}</Text>}
+      </TouchableOpacity>
 
       <TextInput
         style={styles.input}
@@ -55,18 +54,7 @@ export default function LoginScreen() {
         onChangeText={setPassword}
       />
 
-      <View style={styles.checkboxContainer}>
-        <TouchableOpacity onPress={() => setRememberMe(!rememberMe)}>
-          <View style={[styles.checkbox, rememberMe && styles.checked]} />
-        </TouchableOpacity>
-        <Text style={styles.checkboxText}>Remember me</Text>
-      </View>
-
       <Button title="Sign In" onPress={handleLogin} />
-
-      <TouchableOpacity style={styles.forgotPassword}>
-        <Text style={styles.forgotPasswordText}>Forgot password?</Text>
-      </TouchableOpacity>
     </View>
   );
 }
