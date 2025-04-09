@@ -23,7 +23,7 @@ export default function LoginScreen() {
 
     if (result.success) {
       console.log("Login successful, user id:", result.userId);
-      router.replace("http://localhost:8081");
+      router.replace("/home");
     } else {
       setError(result.error || "Login failed. Please try again.");
     }
@@ -106,6 +106,6 @@ const styles = StyleSheet.create({
   },
   forgotPasswordText: {
     fontSize: 14,
-    color: "#4A90E2",
+    color: "#FF0000",
   },
 });
