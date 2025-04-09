@@ -1,7 +1,7 @@
 import { Position, User } from "./types";
 
 export async function loginUser(
-  userData: User,
+  userData: User
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const response = await fetch("http://localhost:8000/login", {

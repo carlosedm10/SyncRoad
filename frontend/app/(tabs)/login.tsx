@@ -8,13 +8,16 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { router } from "expo-router";
-import { loginUser } from "./routing";
 import { User } from "./types";
+import { loginUser } from "./routing";
 
-export default function LoginScreen() {
+export default function LoginScreen({
+  onLoginSuccess,
+}: {
+  onLoginSuccess: () => void;
+}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
 
   const handleLogin = async () => {
@@ -22,8 +25,8 @@ export default function LoginScreen() {
     const result = await loginUser(user);
 
     if (result.success) {
-      console.log("Login successful, user id:", result.userId);
-      router.replace("http://localhost:8081");
+      onLoginSuccess();
+      // router.replace("http://localhost:8081");
     } else {
       setError(result.error || "Login failed. Please try again.");
     }
@@ -33,9 +36,11 @@ export default function LoginScreen() {
     <View style={styles.container}>
       <Text style={styles.header}>Welcome Back!</Text>
 
-      <TouchableOpacity style={styles.forgotPassword}>
-        {error && <Text style={styles.forgotPasswordText}>{error}</Text>}
-      </TouchableOpacity>
+      {error ? (
+        <TouchableOpacity style={styles.forgotPassword}>
+          <Text style={styles.forgotPasswordText}>{error}</Text>
+        </TouchableOpacity>
+      ) : null}
 
       <TextInput
         style={styles.input}
@@ -73,7 +78,7 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   input: {
-    width: "50%",
+    width: "80%",
     height: 50,
     borderColor: "#ccc",
     borderWidth: 1,
@@ -82,30 +87,11 @@ const styles = StyleSheet.create({
     paddingLeft: 15,
     fontSize: 16,
   },
-  checkboxContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    borderColor: "#aaa",
-    borderWidth: 1,
-    marginRight: 10,
-  },
-  checked: {
-    backgroundColor: "#4A90E2",
-  },
-  checkboxText: {
-    fontSize: 16,
-  },
   forgotPassword: {
-    marginTop: 15,
+    marginBottom: 20,
   },
   forgotPasswordText: {
     fontSize: 14,
-    color: "#4A90E2",
+    color: "#D00",
   },
 });

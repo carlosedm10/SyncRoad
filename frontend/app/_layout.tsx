@@ -1,12 +1,22 @@
-import { usePathname } from "expo-router";
-import HomeScreen from "./home";
-import LoginScreen from "./login";
+import { Slot, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import LoginScreen from "./(tabs)/login";
+import HomeScreen from "./(tabs)/home";
 
 export default function RootLayout() {
-  const pathname = usePathname();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  if (pathname == "/login") {
-    return <LoginScreen />;
+  // TODO: Replace with actual auth logic (like checking token or user state)
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      // Simulate a logged-out state for now
+      setIsLoggedIn(false);
+    };
+    checkLoginStatus();
+  }, []);
+
+  if (!isLoggedIn) {
+    return <LoginScreen onLoginSuccess={() => setIsLoggedIn(true)} />;
   }
 
   return <HomeScreen />;
