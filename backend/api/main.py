@@ -18,14 +18,6 @@ def read_root():
     return "Hello, there is nothing intereseting here. VISIT: http://localhost:8000/docs"
 
 
-@app.get("get-user-info({user_id}")
-def get_user_info(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.user_id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return User
-
-
 # Endpoint to log in the user
 @app.post("/login")
 def login(user_data: UserCredentials, db: Session = Depends(get_db)):
@@ -60,6 +52,14 @@ def create_user(user_data: UserCredentials, db: Session = Depends(get_db)):
         "message": "User created successfully",
         "user_id": new_user.user_id,
     }
+
+
+@app.get("get-user-info({user_id}")
+def get_user_info(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.user_id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return User
 
 
 @app.post("/update-driver")
