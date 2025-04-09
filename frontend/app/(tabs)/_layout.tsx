@@ -1,14 +1,14 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import HomeScreen from "./home";
 
 const Tab = createBottomTabNavigator();
 
-export default function TabLayout() {
+function MyTabs() {
   return (
     <Tab.Navigator>
-      <Tab.Screen name="index" options={{ title: "Home" }}>
-        {() => null}
-      </Tab.Screen>
-      {/* Add more screens here */}
+      <Tab.Screen name="Home" component={HomeScreen} />
     </Tab.Navigator>
   );
 }
+
+export default MyTabs;
