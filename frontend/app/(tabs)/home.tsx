@@ -32,7 +32,7 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <Text style={styles.text}>Buscando guías cercanos...</Text>
       <Animated.Image
-        source={require("../../../assets/images/truck1.png")}
+        source={require("../../assets/images/truck1.png")}
         style={[
           styles.truck,
           {
