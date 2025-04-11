@@ -44,8 +44,8 @@ class LocationData(BaseModel):
 
 class DriverData(BaseModel):
     user_id: int
-    driver = bool
-    linked = bool
+    driver: bool
+    linked: bool
 
 
 class User(Base):
@@ -62,9 +62,11 @@ class User(Base):
     password = Column(String, nullable=False)
     driver = Column(Boolean, default=False)
     # Each user may optionally be linked to one drive session (one-to-many relationship).
-    drive_session = relationship("DriveSession", back_populates="participants")
-    drive_session_id = Column(
-        Integer, ForeignKey("drive_sessions.id"), nullable=True
+    drive_session_id = Column(Integer, ForeignKey("drive_sessions.id"), nullable=True)
+    drive_session = relationship(
+        "DriveSession",
+        back_populates="participants",
+        foreign_keys=[drive_session_id],
     )
     location = relationship(
         "Location",
@@ -78,9 +80,7 @@ class Location(Base):
     __tablename__ = "locations"
     id = Column(Integer, primary_key=True, autoincrement=True)
 
-    user_id = Column(
-        Integer, ForeignKey("users.id"), unique=True, nullable=False
-    )
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
     timestamp = Column(DateTime, nullable=True)
@@ -92,8 +92,18 @@ class DriveSession(Base):
     __tablename__ = "drive_sessions"
     id = Column(Integer, primary_key=True, autoincrement=True)
     token = Column(String, unique=True, nullable=False)
-    # One drive session can have many participants (users), each of which carries a drive_session_id.
-    participants = relationship("User", back_populates="drive_session")
+    driver_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # The user who is the driver
+    driver = relationship("User", foreign_keys=[driver_id])
+
+    # List of users in this session (linked via User.drive_session_id)
+    participants = relationship(
+        "User",
+        back_populates="drive_session",
+        foreign_keys=[User.drive_session_id],
+    )
 
 
 # Dependency for FastAPI to get a database session per request
