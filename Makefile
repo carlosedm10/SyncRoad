@@ -18,7 +18,7 @@ start:
 	@echo "Frontend (Metro) is running at http://localhost:8081"
 
 stop:
-	docker compose -f $(DOCKER_COMPOSE_DEV) down
+		docker compose -f $(DOCKER_COMPOSE_DEV) down --remove-orphans
 
 # ----------------------------- Terminals ----------------------------- #
 
