@@ -1,14 +1,21 @@
 # main.py
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
-from api.models import Base, DriverData, UserCredentials, engine, User, get_db
-
+from api.models import (
+    Base,
+    DriverData,
+    LocationData,
+    UserCredentials,
+    engine,
+    User,
+    Location,
+    get_db,
+)
 from passlib.context import CryptContext
 
-# Create the database tables if they don't already exist
-Base.metadata.create_all(bind=engine)
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+Base.metadata.create_all(bind=engine)  # Crea o actualiza las tablas
 
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 app = FastAPI()
 
@@ -21,12 +28,10 @@ def read_root():
 
 @app.post("/create-user")
 def create_user(user_data: UserCredentials, db: Session = Depends(get_db)):
-    """Endpoint to create a new user."""
-    already_existing_user = (
-        db.query(User).filter(User.email == user_data.email).first()
-    )
-    if already_existing_user:
+    new_user = db.query(User).filter(User.email == user_data.email).first()
+    if new_user:
         raise HTTPException(status_code=409, detail="User already exists")
+
     try:
         hashed_password = pwd_context.hash(user_data.password)
         new_user = User(email=user_data.email, password=hashed_password)
@@ -52,24 +57,75 @@ def login(user_data: UserCredentials, db: Session = Depends(get_db)):
     return {"user_id": user.id, "logged": True}
 
 
-@app.get("get-user-info({user_id}")
+@app.get("/get-user-info/{user_id}")
 def get_user_info(user_id: int, db: Session = Depends(get_db)):
     """Endpoint to get user information by user_id."""
-    user = db.query(User).filter(User.user_id == user_id).first()
+    user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return User
+    return user
 
 
-@app.post("/update-driver")
+# @app.post("/update-location/") # NOTE: uncomment this for testing in Local
+def update_location(
+    location_data: LocationData, db: Session = Depends(get_db)
+):
+    """Method that will connect to raspberry pi and update the location of the user"""
+
+    user = db.query(User).filter(User.id == location_data.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    location = db.query(Location).filter_by(user_id=user.id).first()
+    if location:
+        location.latitude = location_data.latitude
+        location.longitude = location_data.longitude
+        location.timestamp = location_data.timestamp
+    else:
+        location = Location(
+            user_id=user.id,
+            latitude=location_data.latitude,
+            longitude=location_data.longitude,
+            timestamp=location_data.timestamp,
+        )
+        db.add(location)
+    db.commit()
+
+    return {
+        "user_id": user.id,
+        "updated": True,
+    }
+
+
+@app.get("/get-locations/{user_id}")
+def get_locations(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Internal Error")
+
+    last_location = (
+        db.query(Location).filter(Location.user_id == user.id).first()
+    )
+
+    if not last_location:
+        raise HTTPException(status_code=404, detail="Location not found")
+
+    return {
+        "user_id": user.id,
+        "latitude": last_location.latitude,
+        "longitude": last_location.longitude,
+        "timestamp": last_location.timestamp,
+    }
+
+
+@app.post("/update-driver/")
 def update_driver(driver_data: DriverData, db: Session = Depends(get_db)):
     """Updates the drivers preferences when the user clicks the buttons"""
-    user = db.query(User).filter(User.id == driver_data.user_id).first()
+    user = db.query(User).get(User.id == driver_data.user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     try:
         user.driver = driver_data.driver
-        user.linked = driver_data.linked
         db.commit()
         db.refresh(user)
     except Exception as e:
