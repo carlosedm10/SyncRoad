@@ -38,7 +38,7 @@ class DriverData(BaseModel):
 # Define the User model
 class User(Base):
     __tablename__ = "users"
-    user_id = Column(
+    id = Column(
         Integer,
         primary_key=True,
         index=True,

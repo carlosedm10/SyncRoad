@@ -15,25 +15,13 @@ app = FastAPI()
 
 @app.get("/")
 def read_root():
+    """Example endpoint to check if the server is running."""
     return "Hello, there is nothing intereseting here. VISIT: http://localhost:8000/docs"
 
 
-# Endpoint to log in the user
-@app.post("/login")
-def login(user_data: UserCredentials, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == user_data.email).first()
-    if not user:
-        raise HTTPException(
-            status_code=404, detail="User not found. Please sign up."
-        )
-    if not pwd_context.verify(user_data.password, user.password):
-        raise HTTPException(status_code=401, detail="Incorrect password")
-    return {True}
-
-
-# Endpoint to create a new user
 @app.post("/create-user")
 def create_user(user_data: UserCredentials, db: Session = Depends(get_db)):
+    """Endpoint to create a new user."""
     already_existing_user = (
         db.query(User).filter(User.email == user_data.email).first()
     )
@@ -48,14 +36,25 @@ def create_user(user_data: UserCredentials, db: Session = Depends(get_db)):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
-    return {
-        "message": "User created successfully",
-        "user_id": new_user.user_id,
-    }
+    return {"user_id": new_user.id, "created": True}
+
+
+@app.post("/login")
+def login(user_data: UserCredentials, db: Session = Depends(get_db)):
+    """Endpoint to log in a user."""
+    user = db.query(User).filter(User.email == user_data.email).first()
+    if not user:
+        raise HTTPException(
+            status_code=404, detail="User not found. Please sign up."
+        )
+    if not pwd_context.verify(user_data.password, user.password):
+        raise HTTPException(status_code=401, detail="Incorrect password")
+    return {"user_id": user.id, "logged": True}
 
 
 @app.get("get-user-info({user_id}")
 def get_user_info(user_id: int, db: Session = Depends(get_db)):
+    """Endpoint to get user information by user_id."""
     user = db.query(User).filter(User.user_id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -64,7 +63,8 @@ def get_user_info(user_id: int, db: Session = Depends(get_db)):
 
 @app.post("/update-driver")
 def update_driver(driver_data: DriverData, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.user_id == driver_data.user_id).first()
+    """Updates the drivers preferences when the user clicks the buttons"""
+    user = db.query(User).filter(User.id == driver_data.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     try:
@@ -75,4 +75,4 @@ def update_driver(driver_data: DriverData, db: Session = Depends(get_db)):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
-    return {True}
+    return {"user_id": user.id, "updated": True}
