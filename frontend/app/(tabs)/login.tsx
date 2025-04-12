@@ -23,7 +23,7 @@ export default function LoginScreen({
     const user: User = { email, password };
     const result = await loginUser(user);
 
-    if (result.success) {
+    if (result.logged) {
       onLoginSuccess();
       // router.replace("http://localhost:8081");
     } else {
