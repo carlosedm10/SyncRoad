@@ -1,7 +1,7 @@
 import { Slot, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import LoginScreen from "./(tabs)/login";
-import HomeScreen from "./(tabs)/home";
+import HomeScreen from "./(tabs)/home3";
 
 export default function RootLayout() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);

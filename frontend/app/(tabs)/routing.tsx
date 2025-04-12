@@ -14,10 +14,8 @@ export async function loginUser(
     console.log("Response from backend:", data);
 
     if (data.logged) {
-      // Login successful: backend returns { message: "Login successful", user_id: ... }
       return data;
     } else {
-      // Backend returned an error message (e.g., "User not found. Please sign up." or "Incorrect password")
       return { error: data.detail };
     }
   } catch (error) {

@@ -6,6 +6,7 @@ import {
   Button,
   StyleSheet,
   TouchableOpacity,
+  Image,
 } from "react-native";
 import { User } from "./types";
 import { loginUser } from "./routing";
@@ -25,17 +26,21 @@ export default function LoginScreen({
 
     console.log("Logging response:", loggingResponse);
 
-    if (loggingResponse.logged) {
+    if ("logged" in loggingResponse && loggingResponse.logged) {
       onLoginSuccess();
       // router.replace("http://localhost:8081");
-    } else {
+    } else if ("error" in loggingResponse) {
       setError(loggingResponse.error || "Login failed. Please try again.");
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Welcome Back!</Text>
+      <Image
+        source={require("../../assets/images/logo.png")}
+        style={styles.logo}
+        resizeMode="contain"
+      />
 
       {error ? (
         <TouchableOpacity style={styles.forgotPassword}>
@@ -94,5 +99,11 @@ const styles = StyleSheet.create({
   forgotPasswordText: {
     fontSize: 14,
     color: "#D00",
+  },
+
+  logo: {
+    width: 200,
+    height: 200,
+    marginBottom: 20,
   },
 });

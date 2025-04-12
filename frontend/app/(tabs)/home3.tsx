@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 
-export default function Home3Screen() {
+export default function HomeScreen() {
   return (
     <View style={styles.container}>
       {/* Botón Driver */}
