@@ -1,8 +1,8 @@
-import { Position, User } from "./types";
+import { ErrorResponse, Position, User, UserLogged } from "./types";
 
 export async function loginUser(
-  userData: User,
-): Promise<{ success: boolean; error?: string }> {
+  userData: User
+): Promise<UserLogged | ErrorResponse> {
   try {
     const response = await fetch("http://localhost:8000/login", {
       method: "POST",
@@ -11,17 +11,18 @@ export async function loginUser(
     });
 
     const data = await response.json();
+    console.log("Response from backend:", data);
 
-    if (response.ok) {
+    if (data.logged) {
       // Login successful: backend returns { message: "Login successful", user_id: ... }
-      return { success: true };
+      return data;
     } else {
       // Backend returned an error message (e.g., "User not found. Please sign up." or "Incorrect password")
-      return { success: false, error: data.detail };
+      return { error: data.detail };
     }
   } catch (error) {
     console.error("Error in loginUser:", error);
-    return { success: false, error: "Network error" };
+    return { error: "Network error" };
   }
 }
 

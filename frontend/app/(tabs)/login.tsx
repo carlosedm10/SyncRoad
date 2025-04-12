@@ -21,13 +21,15 @@ export default function LoginScreen({
 
   const handleLogin = async () => {
     const user: User = { email, password };
-    const result = await loginUser(user);
+    const loggingResponse = await loginUser(user);
 
-    if (result.logged) {
+    console.log("Logging response:", loggingResponse);
+
+    if (loggingResponse.logged) {
       onLoginSuccess();
       // router.replace("http://localhost:8081");
     } else {
-      setError(result.error || "Login failed. Please try again.");
+      setError(loggingResponse.error || "Login failed. Please try again.");
     }
   };
 
