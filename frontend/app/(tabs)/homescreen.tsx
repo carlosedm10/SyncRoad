@@ -1,16 +1,38 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
-  Image,
+  Animated,
   Alert,
 } from "react-native";
 import { getPosition, updateDriver } from "./routing";
 
 export default function HomeScreen({ userId }: { userId: number }) {
   const [screen, setScreen] = useState<"home" | "home2" | "home3">("home");
+
+  const translateX = useRef(new Animated.Value(0)).current;
+
+  // Animación del camión de izquierda a derecha
+  useEffect(() => {
+    if (screen === "home") {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(translateX, {
+            toValue: 100,
+            duration: 2000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(translateX, {
+            toValue: 0,
+            duration: 2000,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    }
+  }, [screen]);
 
   // Polling para detectar llegada de coordenadas (pasar a home2)
   useEffect(() => {
@@ -36,9 +58,17 @@ export default function HomeScreen({ userId }: { userId: number }) {
 
         <View style={styles.waitingContent}>
           <Text style={styles.mainText}>Buscando guías cercanos...</Text>
-          <Image
+
+          {/* Camión animado */}
+          <Animated.Image
             source={require("../../assets/images/truck1.png")}
-            style={styles.image}
+            style={[
+              styles.truck,
+              {
+                transform: [{ translateX }],
+              },
+            ]}
+            resizeMode="contain"
           />
         </View>
       </View>
@@ -106,7 +136,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
         <View style={styles.infoBox}>
           <View style={styles.statRow}>
             <Text style={styles.statLabel}>Dinero ahorrado:</Text>
-            <Image
+            <Animated.Image
               source={require("../../assets/images/coinss.png")}
               style={styles.icon}
               resizeMode="contain"
@@ -116,7 +146,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
 
           <View style={[styles.statRow, { marginTop: 20 }]}>
             <Text style={styles.statLabel}>Km optimizados</Text>
-            <Image
+            <Animated.Image
               source={require("../../assets/images/measure.webp")}
               style={styles.icon}
               resizeMode="contain"
@@ -149,13 +179,13 @@ const styles = StyleSheet.create({
   },
   mainText: {
     fontSize: 16,
-    alignSelf: "center",
+    textAlign: "center",
     fontWeight: "bold",
     marginBottom: 20,
     position: "absolute",
-    bottom: 180,
+    bottom: 150,
   },
-  image: {
+  truck: {
     width: 100,
     height: 100,
     position: "absolute",
