@@ -13,7 +13,7 @@ import { loginUser } from "./routing";
 export default function LoginScreen({
   onLoginSuccess,
 }: {
-  onLoginSuccess: () => void;
+  onLoginSuccess: (userId: number) => void;
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,9 +23,16 @@ export default function LoginScreen({
     const user: User = { email, password };
     const result = await loginUser(user);
 
-    if (result.logged) {
-      onLoginSuccess();
-      // router.replace("http://localhost:8081");
+    //if (result.logged) {
+    //onLoginSuccess();
+    // router.replace("http://localhost:8081");
+    //} else {
+    //setError(result.error || "Login failed. Please try again.");
+    //}
+
+    if (result.logged && result.user_id) {
+      // Guardamos el user_id localmente para usarlo en HomeScreen
+      onLoginSuccess(result.user_id);
     } else {
       setError(result.error || "Login failed. Please try again.");
     }

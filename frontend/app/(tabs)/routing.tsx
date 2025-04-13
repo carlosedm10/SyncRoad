@@ -1,8 +1,8 @@
-import { Position, User } from "./types";
+import { User } from "./types";
 
 export async function loginUser(
-  userData: User,
-): Promise<{ success: boolean; error?: string }> {
+  userData: User
+): Promise<{ logged: boolean; user_id?: number; error?: string }> {
   try {
     const response = await fetch("http://localhost:8000/login", {
       method: "POST",
@@ -13,29 +13,49 @@ export async function loginUser(
     const data = await response.json();
 
     if (response.ok) {
-      // Login successful: backend returns { message: "Login successful", user_id: ... }
-      return { success: true };
+      return { logged: true, user_id: data.user_id };
     } else {
-      // Backend returned an error message (e.g., "User not found. Please sign up." or "Incorrect password")
-      return { success: false, error: data.detail };
+      return { logged: false, error: data.detail };
     }
   } catch (error) {
     console.error("Error in loginUser:", error);
-    return { success: false, error: "Network error" };
+    return { logged: false, error: "Network error" };
   }
 }
 
-export async function getPosition(): Promise<Position | null> {
+export async function getPosition(userId: number) {
   try {
-    const response = await fetch("/get_position/");
+    const response = await fetch(
+      `http://localhost:8000/get-locations/${userId}`
+    );
     if (response.ok) {
-      const position = await response.json();
-      return position;
-    } else {
-      return null;
+      return await response.json(); // contiene lat, long, timestamp
     }
+    return null;
   } catch (error) {
-    console.error("Error retrieving position:", error);
+    console.error("Error al obtener posición:", error);
+    return null;
+  }
+}
+
+export async function updateDriver(
+  userId: number,
+  linked: boolean,
+  isDriver: boolean
+) {
+  try {
+    const response = await fetch("http://localhost:8000/update-driver/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: userId,
+        linked: linked,
+        driver: isDriver,
+      }),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Error al actualizar driver:", error);
     return null;
   }
 }
