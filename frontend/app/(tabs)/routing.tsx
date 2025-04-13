@@ -1,17 +1,27 @@
+<<<<<<< HEAD
 import { User } from "./types";
 
 export async function loginUser(
   userData: User
 ): Promise<{ logged: boolean; user_id?: number; error?: string }> {
+=======
+import { ErrorResponse, Position, User, UserLogged } from "./types";
+
+export async function loginUser(
+  userData: User
+): Promise<UserLogged | ErrorResponse> {
+>>>>>>> da0550791669b7240162b3bb4533d3b0bba50cb7
   try {
-    const response = await fetch("http://localhost:8000/login", {
+    const response = await fetch("http://192.168.0.23:8000/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(userData),
     });
 
     const data = await response.json();
+    console.log("Response from backend:", data);
 
+<<<<<<< HEAD
     if (response.ok) {
       return { logged: true, user_id: data.user_id };
     } else {
@@ -20,6 +30,16 @@ export async function loginUser(
   } catch (error) {
     console.error("Error in loginUser:", error);
     return { logged: false, error: "Network error" };
+=======
+    if (data.logged) {
+      return data;
+    } else {
+      return { error: data.detail };
+    }
+  } catch (error) {
+    console.error("Error in loginUser:", error);
+    return { error: "Network error" };
+>>>>>>> da0550791669b7240162b3bb4533d3b0bba50cb7
   }
 }
 
