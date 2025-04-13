@@ -29,27 +29,12 @@ export default function LoginScreen({
     const user: User = { email, password };
     const loggingResponse = await loginUser(user);
 
-<<<<<<< HEAD
-    //if (result.logged) {
-    //onLoginSuccess();
-    // router.replace("http://localhost:8081");
-    //} else {
-    //setError(result.error || "Login failed. Please try again.");
-    //}
-
-    if (result.logged && result.user_id) {
-      // Guardamos el user_id localmente para usarlo en HomeScreen
-      onLoginSuccess(result.user_id);
-    } else {
-      setError(result.error || "Login failed. Please try again.");
-=======
     console.log("Logging response:", loggingResponse);
 
-    if ("logged" in loggingResponse && loggingResponse.logged) {
-      onLoginSuccess();
-    } else if ("error" in loggingResponse) {
+    if (loggingResponse.logged && loggingResponse.user_id) {
+      onLoginSuccess(loggingResponse.user_id);
+    } else if (loggingResponse.error) {
       setError(loggingResponse.error || "Login failed. Please try again.");
->>>>>>> da0550791669b7240162b3bb4533d3b0bba50cb7
     }
   };
 
@@ -130,7 +115,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#D00",
   },
-
   logo: {
     width: 250,
     height: 250,
