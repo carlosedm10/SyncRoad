@@ -4,7 +4,7 @@ export async function loginUser(
   userData: User
 ): Promise<{ logged: boolean; user_id?: number; error?: string }> {
   try {
-    const response = await fetch("http://10.236.23.52:8000/login", {
+    const response = await fetch("http://localhost:8000/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(userData),
@@ -26,7 +26,7 @@ export async function loginUser(
 export async function getPosition(userId: number) {
   try {
     const response = await fetch(
-      `http://10.236.23.52:8000/get-locations/${userId}`
+      `http://localhost:8000/get-locations/${userId}`
     );
     if (response.ok) {
       return await response.json(); // contiene lat, long, timestamp
@@ -44,7 +44,7 @@ export async function updateDriver(
   isDriver: boolean
 ) {
   try {
-    const response = await fetch("http://10.236.23.52:8000/update-driver/", {
+    const response = await fetch("http://localhost:8000/update-driver/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
