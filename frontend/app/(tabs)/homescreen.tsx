@@ -8,6 +8,7 @@ import {
   Alert,
 } from "react-native";
 import { getPosition, updateDriver } from "./routing";
+import MapComponent from "@/components/Maps";
 
 export default function HomeScreen({ userId }: { userId: number }) {
   const [screen, setScreen] = useState<"home" | "home2" | "home3">("home");
@@ -29,7 +30,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
             duration: 2000,
             useNativeDriver: true,
           }),
-        ]),
+        ])
       ).start();
     }
   }, [screen]);
@@ -82,7 +83,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
         <TouchableOpacity style={styles.driverButton}>
           <Text style={styles.driverText}>Driver</Text>
         </TouchableOpacity>
-
+        <MapComponent></MapComponent>
         <View style={styles.infoBox}>
           <Text style={styles.infoText}>
             Hemos encontrado al guía{"\n"}
@@ -123,7 +124,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
         <TouchableOpacity style={styles.driverButton}>
           <Text style={styles.driverText}>Driver</Text>
         </TouchableOpacity>
-
+        <MapComponent></MapComponent>
         <TouchableOpacity
           style={styles.endButton}
           onPress={() => setScreen("home")}
