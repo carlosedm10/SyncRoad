@@ -6,6 +6,12 @@ import {
   Button,
   StyleSheet,
   TouchableOpacity,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import { User } from "./types";
 import { loginUser } from "./routing";
@@ -13,7 +19,7 @@ import { loginUser } from "./routing";
 export default function LoginScreen({
   onLoginSuccess,
 }: {
-  onLoginSuccess: () => void;
+  onLoginSuccess: (userId: number) => void;
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,45 +27,61 @@ export default function LoginScreen({
 
   const handleLogin = async () => {
     const user: User = { email, password };
-    const result = await loginUser(user);
+    const loggingResponse = await loginUser(user);
 
-    if (result.success) {
-      onLoginSuccess();
-      // router.replace("http://localhost:8081");
-    } else {
-      setError(result.error || "Login failed. Please try again.");
+    console.log("Logging response:", loggingResponse);
+
+    if (loggingResponse.logged && loggingResponse.user_id) {
+      onLoginSuccess(loggingResponse.user_id);
+    } else if (loggingResponse.error) {
+      setError(loggingResponse.error || "Login failed. Please try again.");
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Welcome Back!</Text>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <ScrollView
+          contentContainerStyle={styles.container}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+        >
+          <Image
+            source={require("../../assets/images/logo.png")}
+            style={styles.logo}
+            resizeMode="contain"
+          />
 
-      {error ? (
-        <TouchableOpacity style={styles.forgotPassword}>
-          <Text style={styles.forgotPasswordText}>{error}</Text>
-        </TouchableOpacity>
-      ) : null}
+          {error ? (
+            <TouchableOpacity style={styles.forgotPassword}>
+              <Text style={styles.forgotPasswordText}>{error}</Text>
+            </TouchableOpacity>
+          ) : null}
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        autoCapitalize="none"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
-      />
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            autoCapitalize="none"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+          />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
 
-      <Button title="Sign In" onPress={handleLogin} />
-    </View>
+          <Button title="Sign In" onPress={handleLogin} />
+        </ScrollView>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -92,5 +114,10 @@ const styles = StyleSheet.create({
   forgotPasswordText: {
     fontSize: 14,
     color: "#D00",
+  },
+  logo: {
+    width: 250,
+    height: 250,
+    marginBottom: 20,
   },
 });
