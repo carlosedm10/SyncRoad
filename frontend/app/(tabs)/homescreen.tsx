@@ -48,16 +48,27 @@ export default function HomeScreen({ userId }: { userId: number }) {
 
     return () => clearInterval(interval);
   }, [screen, userId]);
-  // Polling para actualizar ahorrado y km optimizados
+
+  // Incrementar euros ahorrados cada 8 segundos
   useEffect(() => {
     if (screen !== "home3") return;
 
-    const interval = setInterval(() => {
+    const euroInterval = setInterval(() => {
       setAhorrado((prev) => prev + 1);
-      setKmOptimizados((prev) => prev + 1);
-    }, 60000); // cada minuto
+    }, 8000); // ✅ cada 8 segundos
 
-    return () => clearInterval(interval);
+    return () => clearInterval(euroInterval);
+  }, [screen]);
+
+  // Incrementar kilómetros optimizados cada 2 segundos
+  useEffect(() => {
+    if (screen !== "home3") return;
+
+    const kmInterval = setInterval(() => {
+      setKmOptimizados((prev) => prev + 1);
+    }, 2000); // ✅ cada 2 segundos
+
+    return () => clearInterval(kmInterval);
   }, [screen]);
 
   // Pantalla 1: Esperando guía
@@ -156,7 +167,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
               <View style={styles.circle}>
                 <Text style={styles.circleText}>{ahorrado}</Text>
               </View>
-              <Text style={styles.statLabel}>Dinero ahorrado</Text>
+              <Text style={styles.statLabel}>Euros ahorrados</Text>
             </View>
 
             {/* Km optimizados */}
