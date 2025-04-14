@@ -8,10 +8,11 @@ import {
   Alert,
 } from "react-native";
 import { getPosition, updateDriver } from "./routing";
-
+const MINUTO = 60 * 1000; // 1 minuto en milisegundos
 export default function HomeScreen({ userId }: { userId: number }) {
   const [screen, setScreen] = useState<"home" | "home2" | "home3">("home");
-
+  const [ahorrado, setAhorrado] = useState(0);
+  const [kmOptimizados, setKmOptimizados] = useState(0);
   const translateX = useRef(new Animated.Value(0)).current;
 
   // Animación del camión de izquierda a derecha
@@ -29,7 +30,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
             duration: 2000,
             useNativeDriver: true,
           }),
-        ]),
+        ])
       ).start();
     }
   }, [screen]);
@@ -47,6 +48,17 @@ export default function HomeScreen({ userId }: { userId: number }) {
 
     return () => clearInterval(interval);
   }, [screen, userId]);
+  // Polling para actualizar ahorrado y km optimizados
+  useEffect(() => {
+    if (screen !== "home3") return;
+
+    const interval = setInterval(() => {
+      setAhorrado((prev) => prev + 1);
+      setKmOptimizados((prev) => prev + 1);
+    }, 60000); // cada minuto
+
+    return () => clearInterval(interval);
+  }, [screen]);
 
   // Pantalla 1: Esperando guía
   if (screen === "home") {
@@ -126,33 +138,35 @@ export default function HomeScreen({ userId }: { userId: number }) {
 
         <TouchableOpacity
           style={styles.endButton}
-          onPress={() => setScreen("home")}
+          onPress={() => {
+            setScreen("home");
+            setAhorrado(0);
+            setKmOptimizados(0);
+          }}
         >
           <Text style={styles.endButtonText}>Finalizar trayecto</Text>
         </TouchableOpacity>
 
-        <Text style={styles.mainText}>Siguiendo a Platooning....</Text>
+        <Text style={styles.followingText}>Siguiendo a Platooning....</Text>
 
         <View style={styles.infoBox}>
-          <View style={styles.statRow}>
-            <Text style={styles.statLabel}>Dinero ahorrado:</Text>
-            <Animated.Image
-              source={require("../../assets/images/coinss.png")}
-              style={styles.icon}
-              resizeMode="contain"
-            />
-          </View>
-          <View style={styles.bar} />
+          <View style={styles.statsContainer}>
+            {/* Dinero */}
+            <View style={styles.statItem}>
+              <View style={styles.circle}>
+                <Text style={styles.circleText}>{ahorrado}</Text>
+              </View>
+              <Text style={styles.statLabel}>Dinero ahorrado</Text>
+            </View>
 
-          <View style={[styles.statRow, { marginTop: 20 }]}>
-            <Text style={styles.statLabel}>Km optimizados</Text>
-            <Animated.Image
-              source={require("../../assets/images/measure.webp")}
-              style={styles.icon}
-              resizeMode="contain"
-            />
+            {/* Km optimizados */}
+            <View style={styles.statItem}>
+              <View style={styles.circle}>
+                <Text style={styles.circleText}>{kmOptimizados}</Text>
+              </View>
+              <Text style={styles.statLabel}>Km optimizados</Text>
+            </View>
           </View>
-          <View style={styles.bar} />
         </View>
       </View>
     );
@@ -179,11 +193,12 @@ const styles = StyleSheet.create({
   },
   mainText: {
     fontSize: 16,
-    textAlign: "center",
+    alignSelf: "center",
     fontWeight: "bold",
     marginBottom: 20,
     position: "absolute",
-    bottom: 150,
+    bottom: 170,
+    whiteSpace: "nowrap",
   },
   truck: {
     width: 100,
@@ -289,5 +304,47 @@ const styles = StyleSheet.create({
   icon: {
     width: 40,
     height: 40,
+  },
+
+  followingText: {
+    marginTop: 60,
+    marginBottom: 20,
+    fontSize: 16,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  statsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "100%",
+  },
+
+  statItem: {
+    alignItems: "center",
+    marginHorizontal: 10,
+  },
+
+  statIcon: {
+    width: 40,
+    height: 40,
+    marginBottom: 10,
+  },
+
+  circle: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    borderWidth: 2,
+    borderColor: "#000",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    marginBottom: 10,
+  },
+
+  circleText: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#000",
   },
 });
