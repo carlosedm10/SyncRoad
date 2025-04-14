@@ -4,26 +4,26 @@
     "slug": "SyncRoad",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/favicon.svg",
+    "icon": "./assets/images/logo.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/favicon.svg",
+        "foregroundImage": "./assets/images/logo.png",
         "backgroundColor": "#ffffff"
       }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/favicon.svg",
+        "foregroundImage": "./assets/images/logo.png",
         "backgroundColor": "#ffffff"
       }
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.svg",
+      "favicon": "./assets/images/logo.png",
       "backgroundColor": "#ffffff"
     },
     "plugins": [
