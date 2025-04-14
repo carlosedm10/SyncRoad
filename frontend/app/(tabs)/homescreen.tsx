@@ -8,6 +8,7 @@ import {
   Alert,
 } from "react-native";
 import { getPosition, updateDriver } from "./routing";
+import InteractiveMap from "@/components/InteractiveMaps";
 
 export default function HomeScreen({ userId }: { userId: number }) {
   const [screen, setScreen] = useState<"home" | "home2" | "home3">("home");
@@ -29,7 +30,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
             duration: 2000,
             useNativeDriver: true,
           }),
-        ]),
+        ])
       ).start();
     }
   }, [screen]);
