@@ -7,14 +7,25 @@ import {
   Animated,
   Alert,
 } from "react-native";
+import * as Location from "expo-location";
 import { getPosition, updateDriver } from "./routing";
+import InteractiveMap from "../../frontend/components/InteractiveMap";
 
 export default function HomeScreen({ userId }: { userId: number }) {
   const [screen, setScreen] = useState<"home" | "home2" | "home3">("home");
 
+  const [userLocation, setUserLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [driverLocation, setDriverLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+
   const translateX = useRef(new Animated.Value(0)).current;
 
-  // Animación del camión de izquierda a derecha
+  // Animación del camión
   useEffect(() => {
     if (screen === "home") {
       Animated.loop(
@@ -34,13 +45,30 @@ export default function HomeScreen({ userId }: { userId: number }) {
     }
   }, [screen]);
 
-  // Polling para detectar llegada de coordenadas (pasar a home2)
+  // Obtener ubicación real del usuario
+  useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Permiso denegado", "No se puede obtener ubicación.");
+        return;
+      }
+      const location = await Location.getCurrentPositionAsync({});
+      setUserLocation({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+    })();
+  }, []);
+
+  // Polling para detectar llegada de conductor
   useEffect(() => {
     if (screen !== "home") return;
 
     const interval = setInterval(async () => {
       const position = await getPosition(userId);
       if (position) {
+        setDriverLocation(position);
         setScreen("home2");
       }
     }, 3000);
@@ -48,7 +76,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
     return () => clearInterval(interval);
   }, [screen, userId]);
 
-  // Pantalla 1: Esperando guía
+  // Pantalla 1: Buscando guía
   if (screen === "home") {
     return (
       <View style={styles.container}>
@@ -58,8 +86,6 @@ export default function HomeScreen({ userId }: { userId: number }) {
 
         <View style={styles.waitingContent}>
           <Text style={styles.mainText}>Buscando guías cercanos...</Text>
-
-          {/* Camión animado */}
           <Animated.Image
             source={require("../../assets/images/truck1.png")}
             style={[
@@ -116,10 +142,10 @@ export default function HomeScreen({ userId }: { userId: number }) {
     );
   }
 
-  // Pantalla 3: Siguiendo al guía
-  if (screen === "home3") {
+  // Pantalla 3: Mapa con el conductor y seguidor
+  if (screen === "home3" && userLocation && driverLocation) {
     return (
-      <View style={styles.container}>
+      <View style={{ flex: 1 }}>
         <TouchableOpacity style={styles.driverButton}>
           <Text style={styles.driverText}>Driver</Text>
         </TouchableOpacity>
@@ -131,29 +157,19 @@ export default function HomeScreen({ userId }: { userId: number }) {
           <Text style={styles.endButtonText}>Finalizar trayecto</Text>
         </TouchableOpacity>
 
-        <Text style={styles.mainText}>Siguiendo a Platooning....</Text>
+        <InteractiveMap
+          userLocation={userLocation}
+          driverLocation={driverLocation}
+        />
+      </View>
+    );
+  }
 
-        <View style={styles.infoBox}>
-          <View style={styles.statRow}>
-            <Text style={styles.statLabel}>Dinero ahorrado:</Text>
-            <Animated.Image
-              source={require("../../assets/images/coinss.png")}
-              style={styles.icon}
-              resizeMode="contain"
-            />
-          </View>
-          <View style={styles.bar} />
-
-          <View style={[styles.statRow, { marginTop: 20 }]}>
-            <Text style={styles.statLabel}>Km optimizados</Text>
-            <Animated.Image
-              source={require("../../assets/images/measure.webp")}
-              style={styles.icon}
-              resizeMode="contain"
-            />
-          </View>
-          <View style={styles.bar} />
-        </View>
+  // Si aún no se ha obtenido la ubicación del usuario
+  if (!userLocation) {
+    return (
+      <View style={styles.container}>
+        <Text>Obteniendo ubicación...</Text>
       </View>
     );
   }
