@@ -31,7 +31,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
             duration: 2000,
             useNativeDriver: true,
           }),
-        ]),
+        ])
       ).start();
     }
   }, [screen]);
@@ -50,6 +50,18 @@ export default function HomeScreen({ userId }: { userId: number }) {
     return () => clearInterval(interval);
   }, [screen, userId]);
   // Polling para actualizar ahorrado y km optimizados
+  useEffect(() => {
+    if (screen !== "home3") return;
+
+    const interval = setInterval(() => {
+      setAhorrado((prev) => prev + 1);
+      setKmOptimizados((prev) => prev + 1);
+    }, 60000); // cada minuto
+
+    return () => clearInterval(interval);
+  }, [screen]);
+
+  // Incrementar euros ahorrados cada 8 segundos
   useEffect(() => {
     if (screen !== "home3") return;
 
