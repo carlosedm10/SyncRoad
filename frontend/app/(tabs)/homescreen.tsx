@@ -8,7 +8,8 @@ import {
   Alert,
 } from "react-native";
 import { getPosition, updateDriver } from "./routing";
-const MINUTO = 60 * 1000; // 1 minuto en milisegundos
+import MapComponent from "@/components/Maps";
+
 export default function HomeScreen({ userId }: { userId: number }) {
   const [screen, setScreen] = useState<"home" | "home2" | "home3">("home");
   const [ahorrado, setAhorrado] = useState(0);
@@ -116,7 +117,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
         <TouchableOpacity style={styles.driverButton}>
           <Text style={styles.driverText}>Driver</Text>
         </TouchableOpacity>
-
+        <MapComponent></MapComponent>
         <View style={styles.infoBox}>
           <Text style={styles.infoText}>
             Hemos encontrado al guía{"\n"}
@@ -157,7 +158,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
         <TouchableOpacity style={styles.driverButton}>
           <Text style={styles.driverText}>Driver</Text>
         </TouchableOpacity>
-
+        <MapComponent></MapComponent>
         <TouchableOpacity
           style={styles.endButton}
           onPress={() => {
