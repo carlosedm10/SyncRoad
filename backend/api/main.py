@@ -260,6 +260,7 @@ def connect_rpi_wifi(
     ]
     try:
         result = subprocess.run(command, capture_output=True, text=True)
+        print("probando conexión a WiFi")
         if result.returncode != 0:
             raise HTTPException(
                 status_code=500,
