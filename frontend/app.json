@@ -4,27 +4,27 @@
     "slug": "SyncRoad",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/favicon.svg",
+    "icon": "./assets/images/logo.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/favicon.svg",
+        "foregroundImage": "./assets/images/favicon/favicon-512x512.png",
         "backgroundColor": "#ffffff"
       }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/favicon.svg",
+        "foregroundImage": "./assets/images/favicon/favicon-192x192.png",
         "backgroundColor": "#ffffff"
       }
     },
     "web": {
+      "favicon/favicon": "./assets/images/favicon/favicon-512x512.png",
+      "backgroundColor": "#ffffff",
       "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/favicon.svg",
-      "backgroundColor": "#ffffff"
+      "output": "static"
     },
     "plugins": [
       "expo-router",
