@@ -1,5 +1,12 @@
 # main.py
-from fastapi import FastAPI, Depends, HTTPException
+import asyncio
+from fastapi import (
+    FastAPI,
+    Depends,
+    HTTPException,
+    WebSocket,
+    WebSocketDisconnect,
+)
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 import subprocess
@@ -8,6 +15,7 @@ from api.models import (
     Base,
     UserCredentials,
     DriverData,
+    ConnectionData,
     LocationUpdate,
     WifiCredentials,
     engine,
@@ -20,17 +28,46 @@ from api.models import (
 Base.metadata.create_all(bind=engine)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 app = FastAPI()
 
+# ------------------------------------------------------------------------------
+# WebSocket Connection Manager for drivers and followers
+# ------------------------------------------------------------------------------
+from typing import Dict, List
 
-@app.get("/")
-def read_root():
-    return "Hello, there is nothing interesting here. VISIT: http://localhost:8000/docs"
+
+class ConnectionManager:
+    def __init__(self):
+        self.driver_ws: Dict[int, WebSocket] = {}
+        self.followers_ws: Dict[int, List[WebSocket]] = {}
+
+    def connect_driver(self, driver_id: int, ws: WebSocket):
+        self.driver_ws[driver_id] = ws
+
+    def disconnect_driver(self, driver_id: int):
+        self.driver_ws.pop(driver_id, None)
+
+    def connect_follower(self, driver_id: int, ws: WebSocket):
+        self.followers_ws.setdefault(driver_id, []).append(ws)
+
+    def disconnect_follower(self, driver_id: int, ws: WebSocket):
+        if driver_id in self.followers_ws:
+            self.followers_ws[driver_id].remove(ws)
+
+    async def broadcast_to_followers(self, driver_id: int, message: dict):
+        for ws in self.followers_ws.get(driver_id, []):
+            try:
+                await ws.send_json(message)
+            except:
+                pass  # ignore broken connections
+
+
+manager = ConnectionManager()
 
 
 # ------------------------------------------------------------------------------
-# 1. Login de usuario (solo verifica email/pass, devuelve booleans)
+# 1. Login de usuario
+# (sin cambios)
 # ------------------------------------------------------------------------------
 @app.post("/login")
 def login(user_data: UserCredentials, db: Session = Depends(get_db)):
@@ -41,7 +78,6 @@ def login(user_data: UserCredentials, db: Session = Depends(get_db)):
         )
     if not pwd_context.verify(user_data.password, user.password):
         raise HTTPException(status_code=401, detail="Incorrect password")
-
     return {
         "login_successful": True,
         "user_id": user.user_id,
@@ -51,26 +87,19 @@ def login(user_data: UserCredentials, db: Session = Depends(get_db)):
 
 
 # ------------------------------------------------------------------------------
-# 2. Crear un nuevo usuario (por defecto, driver=False, linked=False)
+# 2. Crear un nuevo usuario
+# (sin cambios)
 # ------------------------------------------------------------------------------
 @app.post("/create-user")
 def create_user(user_data: UserCredentials, db: Session = Depends(get_db)):
-    already_existing_user = (
-        db.query(User).filter(User.email == user_data.email).first()
-    )
-    if already_existing_user:
+    existing = db.query(User).filter(User.email == user_data.email).first()
+    if existing:
         raise HTTPException(status_code=409, detail="User already exists")
-
-    try:
-        hashed_password = pwd_context.hash(user_data.password)
-        new_user = User(email=user_data.email, password=hashed_password)
-        db.add(new_user)
-        db.commit()
-        db.refresh(new_user)
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-
+    hashed = pwd_context.hash(user_data.password)
+    new_user = User(email=user_data.email, password=hashed)
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
     return {
         "message": "User created successfully",
         "user_id": new_user.user_id,
@@ -92,6 +121,7 @@ def get_user_info(user_id: int, db: Session = Depends(get_db)):
         "email": user.email,
         "driver": user.driver,
         "linked": user.linked,
+        "follow_target_id": user.follow_target_id,
     }
 
 
@@ -103,16 +133,10 @@ def update_driver(driver_data: DriverData, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.user_id == driver_data.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-
-    try:
-        user.driver = driver_data.driver
-        user.linked = driver_data.linked
-        db.commit()
-        db.refresh(user)
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-
+    user.driver = driver_data.driver
+    user.linked = driver_data.linked
+    db.commit()
+    db.refresh(user)
     return {
         "success": True,
         "user_id": user.user_id,
@@ -122,88 +146,99 @@ def update_driver(driver_data: DriverData, db: Session = Depends(get_db)):
 
 
 # ------------------------------------------------------------------------------
-# 5. Actualizar ubicación (solo si driver=True)
+# 5. WebSocket endpoint for Raspberry Pi (driver) to send GPS data
 # ------------------------------------------------------------------------------
-@app.post("/update-location")
-def update_location(
-    location_data: LocationUpdate,
+@app.websocket("/ws/gps/{driver_id}")
+async def ws_gps(
+    driver_id: int, websocket: WebSocket, db: Session = Depends(get_db)
+):
+    await websocket.accept()
+    user = db.query(User).filter(User.user_id == driver_id).first()
+    if not user or not user.driver:
+        await websocket.close(code=1008)
+        return
+    manager.connect_driver(driver_id, websocket)
+    try:
+        while True:
+            data = await websocket.receive_json()
+            lat = data.get("latitude")
+            lon = data.get("longitude")
+            if lat is None or lon is None:
+                await websocket.send_json(
+                    {"error": "latitude and longitude required"}
+                )
+                continue
+            # Guardar en BD
+            loc = Location(user_id=driver_id, latitude=lat, longitude=lon)
+            db.add(loc)
+            db.commit()
+            db.refresh(loc)
+            message = {
+                "latitude": lat,
+                "longitude": lon,
+                "timestamp": loc.timestamp.isoformat(),
+            }
+            # Enviar a followers
+            await manager.broadcast_to_followers(driver_id, message)
+    except WebSocketDisconnect:
+        manager.disconnect_driver(driver_id)
+
+
+# ------------------------------------------------------------------------------
+# 6. WebSocket endpoint for follower to receive GPS data
+# ------------------------------------------------------------------------------
+@app.websocket("/ws/follow/{follower_id}/{driver_id}")
+async def ws_follow(
+    follower_id: int,
+    driver_id: int,
+    websocket: WebSocket,
     db: Session = Depends(get_db),
-    user_id: int = None,
 ):
-    """
-    Registra la latitud/longitud en la base de datos para user_id.
-    Normalmente se extraería user_id de un token JWT. Aquí lo hacemos simple.
-    """
-    user = db.query(User).filter(User.user_id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    # Si el usuario no es "driver", no puede actualizar ubicación
-    if not user.driver:
-        raise HTTPException(status_code=403, detail="User is not a driver")
-
-    new_location = Location(
-        user_id=user.user_id,
-        latitude=location_data.latitude,
-        longitude=location_data.longitude,
-    )
-    db.add(new_location)
-    db.commit()
-    db.refresh(new_location)
-
-    return {
-        "message": "Location updated successfully",
-        "location_id": new_location.location_id,
-        "user_id": user_id,
-    }
+    await websocket.accept()
+    follower = db.query(User).filter(User.user_id == follower_id).first()
+    if (
+        not follower
+        or not follower.linked
+        or follower.follow_target_id != driver_id
+    ):
+        await websocket.close(code=1008)
+        return
+    manager.connect_follower(driver_id, websocket)
+    try:
+        while True:
+            await asyncio.sleep(1)
+    except WebSocketDisconnect:
+        manager.disconnect_follower(driver_id, websocket)
 
 
 # ------------------------------------------------------------------------------
-# 6. Obtener la última ubicación (solo si linked=True)
+# 7. Endpoint para iniciar conexión de frontend
 # ------------------------------------------------------------------------------
-@app.get("/get-last-location/{driver_user_id}")
-def get_last_location(
-    driver_user_id: int, db: Session = Depends(get_db), user_id: int = None
+@app.post("/connect-driver")
+def connect_driver_endpoint(
+    conn: ConnectionData, db: Session = Depends(get_db)
 ):
-    """
-    Retorna la última ubicación registrada de la persona 'driver_user_id'.
-    Se asume que el solicitante (user_id) es un "linked".
-    """
-    # Verificamos que el "driver" existe
-    driver_user = db.query(User).filter(User.user_id == driver_user_id).first()
-    if not driver_user:
-        raise HTTPException(status_code=404, detail="Driver user not found")
-
-    # Verificamos que el solicitante sea "linked"
-    requesting_user = db.query(User).filter(User.user_id == user_id).first()
-    if not requesting_user:
+    driver = db.query(User).filter(User.user_id == conn.driver_id).first()
+    follower = db.query(User).filter(User.user_id == conn.follower_id).first()
+    if not driver or not driver.driver:
         raise HTTPException(
-            status_code=404, detail="Requesting user not found"
+            status_code=404, detail="Driver not found or not a driver"
         )
-
-    if not requesting_user.linked:
-        raise HTTPException(status_code=403, detail="User is not 'linked'")
-
-    # Obtenemos la última ubicación
-    last_location = (
-        db.query(Location)
-        .filter(Location.user_id == driver_user_id)
-        .order_by(Location.timestamp.desc())
-        .first()
-    )
-    if not last_location:
-        return {"message": "No location found for this driver"}
-
+    if not follower:
+        raise HTTPException(status_code=404, detail="Follower not found")
+    follower.linked = True
+    follower.follow_target_id = conn.driver_id
+    db.commit()
     return {
-        "driver_user_id": driver_user_id,
-        "latitude": last_location.latitude,
-        "longitude": last_location.longitude,
-        "timestamp": last_location.timestamp,
+        "connected": True,
+        "follower_id": follower.user_id,
+        "driver_id": driver.user_id,
     }
 
 
 # ------------------------------------------------------------------------------
-# 7. Conexión a WiFi (asumiendo que la app corre en la RPi con nmcli)
+# 8. Conexión a WiFi
+# (sin cambios)
 # ------------------------------------------------------------------------------
 @app.post("/connect-rpi-wifi")
 def connect_rpi_wifi(
@@ -211,15 +246,9 @@ def connect_rpi_wifi(
     db: Session = Depends(get_db),
     user_id: int = None,
 ):
-    """
-    Conecta la Raspberry Pi a una red WiFi usando nmcli.
-    Requiere permisos y que 'nmcli' esté instalado.
-    """
-    # (Opcional) validar que quien invoque sea un usuario válido
     user = db.query(User).filter(User.user_id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-
     command = [
         "nmcli",
         "dev",
@@ -237,11 +266,7 @@ def connect_rpi_wifi(
                 detail=f"Error connecting to WiFi: {result.stderr}",
             )
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Exception trying to connect to WiFi: {str(e)}",
-        )
-
+        raise HTTPException(status_code=500, detail=f"Exception: {str(e)}")
     return {
         "message": f"Connected to WiFi SSID '{wifi_data.ssid}' successfully"
     }

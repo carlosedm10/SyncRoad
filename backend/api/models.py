@@ -1,5 +1,4 @@
 # models.py
-import os
 from datetime import datetime
 from sqlalchemy import (
     Column,
@@ -12,27 +11,17 @@ from sqlalchemy import (
     create_engine,
 )
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, relationship
 from pydantic import BaseModel
+import os
 
-# --------------------
-# 1. Configuración de la BD
-# --------------------
-DATABASE_URL = (
-    f"postgresql://{os.getenv('POSTGRES_USER', 'syncroad')}:"
-    f"{os.getenv('POSTGRES_PASSWORD', 'syncroad')}@"
-    f"{os.getenv('DATABASE_HOST', 'syncroad_database')}/"
-    f"{os.getenv('POSTGRES_DB', 'syncroad')}"
-)
-
+DATABASE_URL = f"postgresql://{os.getenv('POSTGRES_USER','syncroad')}:{os.getenv('POSTGRES_PASSWORD','syncroad')}@{os.getenv('DATABASE_HOST','syncroad_database')}/{os.getenv('POSTGRES_DB','syncroad')}"
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
-# --------------------
-# 2. Pydantic models
-# --------------------
+# Pydantic models
 class UserCredentials(BaseModel):
     email: str
     password: str
@@ -54,9 +43,15 @@ class WifiCredentials(BaseModel):
     password: str
 
 
-# --------------------
-# 3. ORM models (tablas)
-# --------------------
+class ConnectionData(BaseModel):
+    follower_id: int
+    driver_id: int
+
+
+# ORM models
+db_Base = Base
+
+
 class User(Base):
     __tablename__ = "users"
     user_id = Column(
@@ -64,9 +59,12 @@ class User(Base):
     )
     email = Column(String, index=True, unique=True, nullable=False)
     password = Column(String, nullable=False)
-    # Nuevos campos booleanos en lugar de "role"
     driver = Column(Boolean, default=False)
     linked = Column(Boolean, default=False)
+    follow_target_id = Column(
+        Integer, ForeignKey("users.user_id"), nullable=True
+    )
+    follow_target = relationship("User", remote_side=[user_id])
 
 
 class Location(Base):
@@ -80,9 +78,9 @@ class Location(Base):
     timestamp = Column(DateTime, default=datetime.utcnow)
 
 
-# --------------------
-# 4. Dependencia para obtener DB
-# --------------------
+# Dependency to get DB session
+
+
 def get_db():
     db = SessionLocal()
     try:
