@@ -1,5 +1,6 @@
 # main.py
 import asyncio
+from datetime import datetime
 from fastapi import (
     FastAPI,
     Depends,
@@ -7,39 +8,51 @@ from fastapi import (
     WebSocket,
     WebSocketDisconnect,
 )
-from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 import subprocess
 
 from api.models import (
     Base,
+    DriveSession,
+    LocationData,
     UserCredentials,
     DriverData,
     ConnectionData,
-    LocationUpdate,
     WifiCredentials,
     engine,
     User,
     Location,
     get_db,
 )
+from sqlalchemy.orm import Session
+
+from fastapi.middleware.cors import CORSMiddleware
 
 # Crear/actualizar tablas en la BD
 Base.metadata.create_all(bind=engine)
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+Base.metadata.create_all(bind=engine)  # Create tables if they don't exist
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-app = FastAPI()
 
-# ------------------------------------------------------------------------------
-# WebSocket Connection Manager for drivers and followers
-# ------------------------------------------------------------------------------
-from typing import Dict, List
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "*"
+    ],  # Replace "*" with your frontend's URL in production for security.
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class ConnectionManager:
     def __init__(self):
-        self.driver_ws: Dict[int, WebSocket] = {}
-        self.followers_ws: Dict[int, List[WebSocket]] = {}
+        self.driver_ws: dict[int, WebSocket] = {}
+        self.followers_ws: dict[int, list[WebSocket]] = {}
 
     def connect_driver(self, driver_id: int, ws: WebSocket):
         self.driver_ws[driver_id] = ws
@@ -65,83 +78,160 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
-# ------------------------------------------------------------------------------
-# 1. Login de usuario
-# (sin cambios)
-# ------------------------------------------------------------------------------
-@app.post("/login")
-def login(user_data: UserCredentials, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == user_data.email).first()
-    if not user:
-        raise HTTPException(
-            status_code=404, detail="User not found. Please sign up."
-        )
-    if not pwd_context.verify(user_data.password, user.password):
-        raise HTTPException(status_code=401, detail="Incorrect password")
-    return {
-        "login_successful": True,
-        "user_id": user.user_id,
-        "driver": user.driver,
-        "linked": user.linked,
-    }
+@app.get("/")
+def read_root():
+    """Example endpoint to check if the server is running."""
+    return (
+        "Hello, there is nothing intereseting here. VISIT: http://localhost:8000/docs"
+    )
 
 
-# ------------------------------------------------------------------------------
-# 2. Crear un nuevo usuario
-# (sin cambios)
-# ------------------------------------------------------------------------------
 @app.post("/create-user")
 def create_user(user_data: UserCredentials, db: Session = Depends(get_db)):
-    existing = db.query(User).filter(User.email == user_data.email).first()
-    if existing:
+    new_user = db.query(User).filter(User.email == user_data.email).first()
+    if new_user:
         raise HTTPException(status_code=409, detail="User already exists")
-    hashed = pwd_context.hash(user_data.password)
-    new_user = User(email=user_data.email, password=hashed)
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return {
-        "message": "User created successfully",
-        "user_id": new_user.user_id,
-        "driver": new_user.driver,
-        "linked": new_user.linked,
-    }
+
+    try:
+        hashed_password = pwd_context.hash(user_data.password)
+        new_user = User(email=user_data.email, password=hashed_password)
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    return {"user_id": new_user.id, "created": True}
 
 
-# ------------------------------------------------------------------------------
-# 3. Obtener información de un usuario (ID)
-# ------------------------------------------------------------------------------
+@app.post("/login")
+def login(user_data: UserCredentials, db: Session = Depends(get_db)):
+    """Endpoint to log in a user."""
+    user = db.query(User).filter(User.email == user_data.email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found. Please sign up.")
+    if not pwd_context.verify(user_data.password, user.password):
+        raise HTTPException(status_code=401, detail="Incorrect password")
+    return {"user_id": user.id, "logged": True}
+
+
 @app.get("/get-user-info/{user_id}")
 def get_user_info(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.user_id == user_id).first()
+    """Endpoint to get user information by user_id."""
+    user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+
+@app.post("/update-location/")  # NOTE: uncomment this for testing in Local
+def update_location(location_data: LocationData, db: Session = Depends(get_db)):
+    """Method that will connect to raspberry pi and update the location of the user"""
+
+    user = db.query(User).filter(User.id == location_data.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    location = db.query(Location).filter_by(user_id=user.id).first()
+    if location:
+        location.latitude = location_data.latitude
+        location.longitude = location_data.longitude
+        location.timestamp = location_data.timestamp
+    else:
+        location = Location(
+            user_id=user.id,
+            latitude=location_data.latitude,
+            longitude=location_data.longitude,
+            timestamp=location_data.timestamp,
+        )
+        db.add(location)
+    db.commit()
+
     return {
-        "user_id": user.user_id,
-        "email": user.email,
-        "driver": user.driver,
-        "linked": user.linked,
-        "follow_target_id": user.follow_target_id,
+        "user_id": user.id,
+        "updated": True,
     }
 
 
-# ------------------------------------------------------------------------------
-# 4. Actualizar driver/linked
-# ------------------------------------------------------------------------------
-@app.post("/update-driver")
+@app.get("/get-locations/{user_id}")
+def get_locations(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Internal Error")
+
+    last_location = db.query(Location).filter(Location.user_id == user.id).first()
+
+    if not last_location:
+        raise HTTPException(status_code=404, detail="Location not found")
+
+    return {
+        "user_id": user.id,
+        "latitude": last_location.latitude,
+        "longitude": last_location.longitude,
+        "timestamp": last_location.timestamp,
+    }
+
+
+@app.post("/update-driver/")
 def update_driver(driver_data: DriverData, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.user_id == driver_data.user_id).first()
+    """Updates the drivers preferences when the user clicks the buttons"""
+    user = db.query(User).filter(User.id == driver_data.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    user.driver = driver_data.driver
-    user.linked = driver_data.linked
-    db.commit()
-    db.refresh(user)
+    try:
+        user.driver = driver_data.driver
+        if driver_data.linked:
+            if user.drive_session_id is None and driver_data.driver is False:
+                # add user to existing session
+                session = db.query(DriveSession).first()
+                if session:
+                    user.drive_session_id = session.id
+                    session.participants.append(user)
+                else:
+                    raise HTTPException(
+                        status_code=404, detail="No active drive session found"
+                    )
+            elif user.drive_session_id is None and driver_data.driver is True:
+                # Create a new DriveSession
+                new_session = DriveSession(
+                    token=f"session-{user.id}-{datetime.utcnow().timestamp()}",
+                    driver_id=user.id if driver_data.driver else None,
+                )
+                db.add(new_session)
+                db.commit()
+                user.drive_session_id = new_session.id
+            else:
+                # Update driver in existing session if needed
+                session = (
+                    db.query(DriveSession).filter_by(id=user.drive_session_id).first()
+                )
+                if session and driver_data.driver:
+                    session.driver_id = user.id
+        else:
+            # If user is linked to a session but now wants to unlink, delete the session
+            if user.drive_session_id:
+                session = (
+                    db.query(DriveSession).filter_by(id=user.drive_session_id).first()
+                )
+                if session:
+                    # Unlink all users connected to this session
+                    users_in_session = (
+                        db.query(User).filter_by(drive_session_id=session.id).all()
+                    )
+                    for u in users_in_session:
+                        u.drive_session_id = None
+                    db.delete(session)
+
+        db.commit()
+        db.refresh(user)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
     return {
-        "success": True,
-        "user_id": user.user_id,
-        "driver": user.driver,
-        "linked": user.linked,
+        "user_id": user.id,
+        "updated": True,
+        "linked": driver_data.linked,
+        "drive_session_id": user.drive_session_id,
     }
 
 
@@ -149,11 +239,9 @@ def update_driver(driver_data: DriverData, db: Session = Depends(get_db)):
 # 5. WebSocket endpoint for Raspberry Pi (driver) to send GPS data
 # ------------------------------------------------------------------------------
 @app.websocket("/ws/gps/{driver_id}")
-async def ws_gps(
-    driver_id: int, websocket: WebSocket, db: Session = Depends(get_db)
-):
+async def ws_gps(driver_id: int, websocket: WebSocket, db: Session = Depends(get_db)):
     await websocket.accept()
-    user = db.query(User).filter(User.user_id == driver_id).first()
+    user = db.query(User).filter(User.id == driver_id).first()
     if not user or not user.driver:
         await websocket.close(code=1008)
         return
@@ -164,9 +252,7 @@ async def ws_gps(
             lat = data.get("latitude")
             lon = data.get("longitude")
             if lat is None or lon is None:
-                await websocket.send_json(
-                    {"error": "latitude and longitude required"}
-                )
+                await websocket.send_json({"error": "latitude and longitude required"})
                 continue
             # Guardar en BD
             loc = Location(user_id=driver_id, latitude=lat, longitude=lon)
@@ -195,12 +281,8 @@ async def ws_follow(
     db: Session = Depends(get_db),
 ):
     await websocket.accept()
-    follower = db.query(User).filter(User.user_id == follower_id).first()
-    if (
-        not follower
-        or not follower.linked
-        or follower.follow_target_id != driver_id
-    ):
+    follower = db.query(User).filter(User.id == follower_id).first()
+    if not follower or not follower.linked or follower.follow_target_id != driver_id:
         await websocket.close(code=1008)
         return
     manager.connect_follower(driver_id, websocket)
@@ -215,15 +297,11 @@ async def ws_follow(
 # 7. Endpoint para iniciar conexión de frontend
 # ------------------------------------------------------------------------------
 @app.post("/connect-driver")
-def connect_driver_endpoint(
-    conn: ConnectionData, db: Session = Depends(get_db)
-):
-    driver = db.query(User).filter(User.user_id == conn.driver_id).first()
-    follower = db.query(User).filter(User.user_id == conn.follower_id).first()
+def connect_driver_endpoint(conn: ConnectionData, db: Session = Depends(get_db)):
+    driver = db.query(User).filter(User.id == conn.driver_id).first()
+    follower = db.query(User).filter(User.id == conn.follower_id).first()
     if not driver or not driver.driver:
-        raise HTTPException(
-            status_code=404, detail="Driver not found or not a driver"
-        )
+        raise HTTPException(status_code=404, detail="Driver not found or not a driver")
     if not follower:
         raise HTTPException(status_code=404, detail="Follower not found")
     follower.linked = True
@@ -231,8 +309,8 @@ def connect_driver_endpoint(
     db.commit()
     return {
         "connected": True,
-        "follower_id": follower.user_id,
-        "driver_id": driver.user_id,
+        "follower_id": follower.id,
+        "driver_id": driver.id,
     }
 
 
@@ -244,9 +322,9 @@ def connect_driver_endpoint(
 def connect_rpi_wifi(
     wifi_data: WifiCredentials,
     db: Session = Depends(get_db),
-    user_id: int = None,
+    user_id: int | None = None,
 ):
-    user = db.query(User).filter(User.user_id == user_id).first()
+    user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     command = [
@@ -268,6 +346,4 @@ def connect_rpi_wifi(
             )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Exception: {str(e)}")
-    return {
-        "message": f"Connected to WiFi SSID '{wifi_data.ssid}' successfully"
-    }
+    return {"message": f"Connected to WiFi SSID '{wifi_data.ssid}' successfully"}
