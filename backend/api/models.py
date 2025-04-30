@@ -1,20 +1,20 @@
 # models.py
 import os
+from datetime import datetime
 from sqlalchemy import (
     Column,
     String,
     Integer,
-    create_engine,
-    ForeignKey,
+    Boolean,
     Float,
     DateTime,
-    Boolean,
     Table,
+    ForeignKey,
+    create_engine,
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from pydantic import BaseModel
-from datetime import datetime
 
 # Construct the database URL from environment variables
 DATABASE_URL = (
@@ -25,8 +25,6 @@ DATABASE_URL = (
 )
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Base class for our models
 Base = declarative_base()
 
 
@@ -46,6 +44,25 @@ class DriverData(BaseModel):
     user_id: int
     driver: bool
     linked: bool
+
+
+class LocationUpdate(BaseModel):
+    latitude: float
+    longitude: float
+
+
+class WifiCredentials(BaseModel):
+    ssid: str
+    password: str
+
+
+class ConnectionData(BaseModel):
+    follower_id: int
+    driver_id: int
+
+
+# ORM models
+db_Base = Base
 
 
 class User(Base):
@@ -106,7 +123,6 @@ class DriveSession(Base):
     )
 
 
-# Dependency for FastAPI to get a database session per request
 def get_db():
     db = SessionLocal()
     try:
