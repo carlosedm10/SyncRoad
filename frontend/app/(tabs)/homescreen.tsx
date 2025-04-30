@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F26262",
     paddingVertical: 10,
     paddingHorizontal: 15,
-    borderRadius: 5,
+    borderRadius: 25,
     zIndex: 10,
   },
   endButtonText: {
