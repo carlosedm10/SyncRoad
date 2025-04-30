@@ -2,7 +2,7 @@ import React from "react";
 import { GoogleMap, LoadScript } from "@react-google-maps/api";
 
 // CARLOS API KEY, OJO CON ESTO QUE ME COBRAN SI LA LIAMOS XD
-const apiKey = "AIzaSyAqM4b9zR8tWZ4rGOz7PSS4OjOjme79y4U";
+const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
 
 const containerStyle = {
   width: "100%",
