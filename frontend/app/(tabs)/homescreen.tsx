@@ -87,8 +87,8 @@ export default function HomeScreen({ userId }: { userId: number }) {
   if (screen === "home") {
     return (
       <View style={styles.container}>
-        <TouchableOpacity style={styles.driverButton}>
-          <Text style={styles.driverText}>Driver</Text>
+        <TouchableOpacity style={styles.followerButton}>
+          <Text style={styles.followerText}>Follower</Text>
         </TouchableOpacity>
 
         <View style={styles.waitingContent}>
@@ -114,10 +114,12 @@ export default function HomeScreen({ userId }: { userId: number }) {
   if (screen === "home2") {
     return (
       <View style={styles.container}>
-        <TouchableOpacity style={styles.driverButton}>
-          <Text style={styles.driverText}>Driver</Text>
+        <TouchableOpacity style={styles.followerButton}>
+          <Text style={styles.followerText}>Follower</Text>
         </TouchableOpacity>
-        <MapComponent></MapComponent>
+        <View style={styles.mapContainer}>
+          <MapComponent />
+        </View>
         <View style={styles.infoBox}>
           <Text style={styles.infoText}>
             Hemos encontrado al guía{"\n"}
@@ -155,10 +157,12 @@ export default function HomeScreen({ userId }: { userId: number }) {
   if (screen === "home3") {
     return (
       <View style={styles.container}>
-        <TouchableOpacity style={styles.driverButton}>
-          <Text style={styles.driverText}>Driver</Text>
+        <TouchableOpacity style={styles.followerButton}>
+          <Text style={styles.followerText}>Follower</Text>
         </TouchableOpacity>
-        <MapComponent></MapComponent>
+        <View style={styles.mapContainer}>
+          <MapComponent />
+        </View>
         <TouchableOpacity
           style={styles.endButton}
           onPress={() => {
@@ -200,6 +204,11 @@ export default function HomeScreen({ userId }: { userId: number }) {
 
 // 🔧 ESTILOS
 const styles = StyleSheet.create({
+  mapContainer: {
+    width: "100%",
+    height: 350, // ajusta esta altura según el espacio que quieras
+    marginTop: 60, // esto empuja el mapa hacia abajo para dejar espacio al botón "Follower"
+  },
   container: {
     flex: 1,
     backgroundColor: "#fff",
@@ -229,7 +238,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 80,
   },
-  driverButton: {
+  followerButton: {
     position: "absolute",
     top: 50,
     left: 20,
@@ -239,7 +248,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     zIndex: 10,
   },
-  driverText: {
+  followerText: {
     color: "#000",
     fontSize: 16,
     fontWeight: "600",
@@ -252,7 +261,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F26262",
     paddingVertical: 10,
     paddingHorizontal: 15,
-    borderRadius: 5,
+    borderRadius: 25,
     zIndex: 10,
   },
   endButtonText: {
@@ -330,7 +339,7 @@ const styles = StyleSheet.create({
   },
 
   followingText: {
-    marginTop: 60,
+    marginTop: 20,
     marginBottom: 20,
     fontSize: 16,
     fontWeight: "bold",
