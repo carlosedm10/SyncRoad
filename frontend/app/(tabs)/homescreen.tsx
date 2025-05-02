@@ -15,6 +15,15 @@ export default function HomeScreen({ userId }: { userId: number }) {
   const [ahorrado, setAhorrado] = useState(0);
   const [kmOptimizados, setKmOptimizados] = useState(0);
   const translateX = useRef(new Animated.Value(0)).current;
+  const [driverLocation, setDriverLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+  const [followerLocation, setFollowerLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+  const [userName, setUserName] = useState<string>("Jorge");
 
   // Animación del camión de izquierda a derecha
   useEffect(() => {
@@ -31,7 +40,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
             duration: 2000,
             useNativeDriver: true,
           }),
-        ]),
+        ])
       ).start();
     }
   }, [screen]);
@@ -81,6 +90,27 @@ export default function HomeScreen({ userId }: { userId: number }) {
     }, 2000); // ✅ cada 2 segundos
 
     return () => clearInterval(kmInterval);
+  }, [screen]);
+  //change to get it from backend
+  // Mock location updates (replace with your actual logic)
+  useEffect(() => {
+    if (screen === "home3") {
+      const updateLocations = () => {
+        // Mocked location updates
+        setDriverLocation({
+          lat: 40.7128 + Math.random() * 0.1,
+          lng: -74.006 + Math.random() * 0.1,
+        });
+        setFollowerLocation({
+          lat: 40.7306 + Math.random() * 0.1,
+          lng: -73.9866 + Math.random() * 0.1,
+        });
+      };
+
+      const locationInterval = setInterval(updateLocations, 5000); // Update every 5 seconds
+
+      return () => clearInterval(locationInterval);
+    }
   }, [screen]);
 
   // Pantalla 1: Esperando guía
@@ -161,7 +191,11 @@ export default function HomeScreen({ userId }: { userId: number }) {
           <Text style={styles.followerText}>Follower</Text>
         </TouchableOpacity>
         <View style={styles.mapContainer}>
-          <MapComponent />
+          <MapComponent
+            driverLocation={driverLocation}
+            followerLocation={followerLocation}
+            userName={userName}
+          />
         </View>
         <TouchableOpacity
           style={styles.endButton}
