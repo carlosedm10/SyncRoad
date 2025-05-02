@@ -3,7 +3,6 @@ import {
   GoogleMap,
   LoadScript,
   Marker,
-  DirectionsService,
   DirectionsRenderer,
 } from "@react-google-maps/api";
 
@@ -21,17 +20,17 @@ const defaultCenter = {
 };
 
 type MapComponentProps = {
-  driverLocation?: { lat: number; lng: number };
-  followerLocation?: { lat: number; lng: number };
   userName?: string;
 };
 
-const MapComponent: React.FC<MapComponentProps> = ({
-  driverLocation,
-  followerLocation,
-  userName,
-}) => {
+const MapComponent: React.FC<MapComponentProps> = ({ userName }) => {
+  console.log("userName prop:", userName);
+
   const [userLocation, setUserLocation] = useState(defaultCenter);
+  const [followerLocation, setFollowerLocation] = useState({
+    lat: 37.7739,
+    lng: -122.4184,
+  });
   const [directions, setDirections] =
     useState<google.maps.DirectionsResult | null>(null);
   const mapRef = useRef<google.maps.Map>();
@@ -42,6 +41,10 @@ const MapComponent: React.FC<MapComponentProps> = ({
         (position) => {
           const { latitude, longitude } = position.coords;
           setUserLocation({ lat: latitude, lng: longitude });
+          setFollowerLocation({
+            lat: latitude + 0.005,
+            lng: longitude + 0.005,
+          });
         },
         (error) => {
           console.error("Error getting user location:", error);
@@ -52,28 +55,33 @@ const MapComponent: React.FC<MapComponentProps> = ({
     }
   }, []);
 
-  useEffect(() => {
-    if (driverLocation && followerLocation) {
-      const directionsService = new google.maps.DirectionsService();
-      directionsService.route(
-        {
-          origin: driverLocation,
-          destination: followerLocation,
-          travelMode: google.maps.TravelMode.DRIVING,
-        },
-        (result, status) => {
-          if (status === google.maps.DirectionsStatus.OK) {
-            setDirections(result);
-          } else {
-            console.error(`Error fetching directions ${result}`, status);
-          }
+  const calculateRoute = () => {
+    const directionsService = new google.maps.DirectionsService();
+    directionsService.route(
+      {
+        origin: userLocation,
+        destination: followerLocation,
+        travelMode: google.maps.TravelMode.DRIVING,
+      },
+      (result, status) => {
+        if (status === google.maps.DirectionsStatus.OK) {
+          setDirections(result);
+        } else {
+          console.error(`Error fetching directions ${result}`, status);
         }
-      );
+      }
+    );
+  };
+
+  useEffect(() => {
+    if (mapRef.current) {
+      calculateRoute();
     }
-  }, [driverLocation, followerLocation]);
+  }, [userLocation, followerLocation]);
 
   const onLoad = (map: google.maps.Map) => {
     mapRef.current = map;
+    calculateRoute();
   };
 
   return (
@@ -92,13 +100,13 @@ const MapComponent: React.FC<MapComponentProps> = ({
                   text: userName,
                   style: { fontWeight: "bold" },
                 }
-              : undefined
+              : {
+                  text: "User",
+                  style: { fontWeight: "bold" },
+                }
           }
         />
-        {driverLocation && <Marker position={driverLocation} label="Driver" />}
-        {followerLocation && (
-          <Marker position={followerLocation} label="Follower" />
-        )}
+        <Marker position={followerLocation} label="Follower" />
         {directions && (
           <DirectionsRenderer
             directions={directions}
