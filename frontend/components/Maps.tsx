@@ -27,7 +27,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ userName }) => {
   console.log("userName prop:", userName);
 
   const [userLocation, setUserLocation] = useState(defaultCenter);
-  const [followerLocation, setFollowerLocation] = useState({
+  const [driverLocation, setFollowerLocation] = useState({
     lat: 37.7739,
     lng: -122.4184,
   });
@@ -60,7 +60,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ userName }) => {
     directionsService.route(
       {
         origin: userLocation,
-        destination: followerLocation,
+        destination: driverLocation,
         travelMode: google.maps.TravelMode.DRIVING,
       },
       (result, status) => {
@@ -77,7 +77,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ userName }) => {
     if (mapRef.current) {
       calculateRoute();
     }
-  }, [userLocation, followerLocation]);
+  }, [userLocation, driverLocation]);
 
   const onLoad = (map: google.maps.Map) => {
     mapRef.current = map;
@@ -106,7 +106,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ userName }) => {
                 }
           }
         />
-        <Marker position={followerLocation} label="Follower" />
+        <Marker position={driverLocation} label="Driver" />
         {directions && (
           <DirectionsRenderer
             directions={directions}
