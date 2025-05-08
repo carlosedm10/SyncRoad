@@ -11,12 +11,13 @@ import { getPosition, updateDriver } from "./routing";
 import MapComponent from "@/components/Maps";
 
 export default function HomeScreen({ userId }: { userId: number }) {
-  const [screen, setScreen] = useState<"home" | "home2" | "home3">("home");
+  const [screen, setScreen] = useState<"home0" | "home" | "home2" | "home3">(
+    "home0",
+  );
   const [ahorrado, setAhorrado] = useState(0);
   const [kmOptimizados, setKmOptimizados] = useState(0);
   const translateX = useRef(new Animated.Value(0)).current;
 
-  // Animación del camión de izquierda a derecha
   useEffect(() => {
     if (screen === "home") {
       Animated.loop(
@@ -36,7 +37,6 @@ export default function HomeScreen({ userId }: { userId: number }) {
     }
   }, [screen]);
 
-  // Polling para detectar llegada de coordenadas (pasar a home2)
   useEffect(() => {
     if (screen !== "home") return;
 
@@ -49,39 +49,56 @@ export default function HomeScreen({ userId }: { userId: number }) {
 
     return () => clearInterval(interval);
   }, [screen, userId]);
-  // Polling para actualizar ahorrado y km optimizados
+
   useEffect(() => {
     if (screen !== "home3") return;
 
     const interval = setInterval(() => {
       setAhorrado((prev) => prev + 1);
       setKmOptimizados((prev) => prev + 1);
-    }, 60000); // cada minuto
+    }, 60000);
 
     return () => clearInterval(interval);
   }, [screen]);
 
-  // Incrementar euros ahorrados cada 8 segundos
   useEffect(() => {
     if (screen !== "home3") return;
 
     const euroInterval = setInterval(() => {
       setAhorrado((prev) => prev + 1);
-    }, 8000); // ✅ cada 8 segundos
+    }, 8000);
 
     return () => clearInterval(euroInterval);
   }, [screen]);
 
-  // Incrementar kilómetros optimizados cada 2 segundos
   useEffect(() => {
     if (screen !== "home3") return;
 
     const kmInterval = setInterval(() => {
       setKmOptimizados((prev) => prev + 1);
-    }, 2000); // ✅ cada 2 segundos
+    }, 2000);
 
     return () => clearInterval(kmInterval);
   }, [screen]);
+
+  // Pantalla 0: Pantalla inicial
+  if (screen === "home0") {
+    return (
+      <View style={styles.container}>
+        <TouchableOpacity style={styles.followerButton}>
+          <Text style={styles.followerText}>Follower</Text>
+        </TouchableOpacity>
+        <View style={styles.waitingContent}>
+          <TouchableOpacity
+            style={styles.searchButton}
+            onPress={() => setScreen("home")}
+          >
+            <Text style={styles.searchButtonText}>Buscar guía</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   // Pantalla 1: Esperando guía
   if (screen === "home") {
@@ -93,16 +110,9 @@ export default function HomeScreen({ userId }: { userId: number }) {
 
         <View style={styles.waitingContent}>
           <Text style={styles.mainText}>Buscando guías cercanos...</Text>
-
-          {/* Camión animado */}
           <Animated.Image
             source={require("../../assets/images/truck1.png")}
-            style={[
-              styles.truck,
-              {
-                transform: [{ translateX }],
-              },
-            ]}
+            style={[styles.truck, { transform: [{ translateX }] }]}
             resizeMode="contain"
           />
         </View>
@@ -143,7 +153,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.noButton}
-              onPress={() => setScreen("home")}
+              onPress={() => setScreen("home0")} // ✅ CAMBIADO A PANTALLA 0
             >
               <Text style={styles.buttonLabel}>NO</Text>
             </TouchableOpacity>
@@ -166,7 +176,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
         <TouchableOpacity
           style={styles.endButton}
           onPress={() => {
-            setScreen("home");
+            setScreen("home0"); // ✅ FINALIZA Y VUELVE A PANTALLA 0
             setAhorrado(0);
             setKmOptimizados(0);
           }}
@@ -178,15 +188,12 @@ export default function HomeScreen({ userId }: { userId: number }) {
 
         <View style={styles.infoBox}>
           <View style={styles.statsContainer}>
-            {/* Dinero */}
             <View style={styles.statItem}>
               <View style={styles.circle}>
                 <Text style={styles.circleText}>{ahorrado}</Text>
               </View>
               <Text style={styles.statLabel}>Euros ahorrados</Text>
             </View>
-
-            {/* Km optimizados */}
             <View style={styles.statItem}>
               <View style={styles.circle}>
                 <Text style={styles.circleText}>{kmOptimizados}</Text>
@@ -202,12 +209,12 @@ export default function HomeScreen({ userId }: { userId: number }) {
   return null;
 }
 
-// 🔧 ESTILOS
+// 🎨 ESTILOS
 const styles = StyleSheet.create({
   mapContainer: {
     width: "100%",
-    height: 350, // ajusta esta altura según el espacio que quieras
-    marginTop: 60, // esto empuja el mapa hacia abajo para dejar espacio al botón "Follower"
+    height: 350,
+    marginTop: 60,
   },
   container: {
     flex: 1,
@@ -225,12 +232,12 @@ const styles = StyleSheet.create({
   },
   mainText: {
     fontSize: 16,
-    alignSelf: "center",
     fontWeight: "bold",
-    marginBottom: 20,
+    marginBottom: 10,
     position: "absolute",
     bottom: 170,
     whiteSpace: "nowrap",
+    textAlign: "center",
   },
   truck: {
     width: 100,
@@ -316,28 +323,11 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#000",
   },
-  statRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
   statLabel: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#000",
   },
-  bar: {
-    backgroundColor: "#A8BBC6",
-    height: 15,
-    borderRadius: 10,
-    marginTop: 6,
-    width: "100%",
-  },
-  icon: {
-    width: 40,
-    height: 40,
-  },
-
   followingText: {
     marginTop: 20,
     marginBottom: 20,
@@ -350,18 +340,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     width: "100%",
   },
-
   statItem: {
     alignItems: "center",
     marginHorizontal: 10,
   },
-
-  statIcon: {
-    width: 40,
-    height: 40,
-    marginBottom: 10,
-  },
-
   circle: {
     width: 70,
     height: 70,
@@ -373,10 +355,21 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     marginBottom: 10,
   },
-
   circleText: {
     fontSize: 22,
     fontWeight: "bold",
     color: "#000",
+  },
+  searchButton: {
+    backgroundColor: "#F26262",
+    paddingVertical: 15,
+    paddingHorizontal: 120,
+    borderRadius: 20,
+    marginBottom: -450,
+  },
+  searchButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });
