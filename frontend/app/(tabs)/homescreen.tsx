@@ -12,7 +12,7 @@ import MapComponent from "@/components/Maps";
 
 export default function HomeScreen({ userId }: { userId: number }) {
   const [screen, setScreen] = useState<"home0" | "home" | "home2" | "home3">(
-    "home0",
+    "home0"
   );
   const [ahorrado, setAhorrado] = useState(0);
   const [kmOptimizados, setKmOptimizados] = useState(0);
@@ -97,6 +97,9 @@ export default function HomeScreen({ userId }: { userId: number }) {
         <TouchableOpacity style={styles.followerButton}>
           <Text style={styles.followerText}>Follower</Text>
         </TouchableOpacity>
+        <View style={styles.mapContainer}>
+          <MapComponent />
+        </View>
         <View style={styles.waitingContent}>
           <TouchableOpacity
             style={styles.searchButton}
@@ -116,6 +119,10 @@ export default function HomeScreen({ userId }: { userId: number }) {
         <TouchableOpacity style={styles.followerButton}>
           <Text style={styles.followerText}>Follower</Text>
         </TouchableOpacity>
+
+        <View style={styles.mapContainer}>
+          <MapComponent />
+        </View>
 
         <View style={styles.waitingContent}>
           <Text style={styles.mainText}>Buscando guías cercanos...</Text>
@@ -242,6 +249,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingBottom: 60,
+    marginTop: 20,
   },
   mainText: {
     fontSize: 16,
@@ -378,7 +386,7 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     paddingHorizontal: 120,
     borderRadius: 20,
-    marginBottom: -450,
+    marginBottom: 0,
   },
   searchButtonText: {
     color: "#fff",
