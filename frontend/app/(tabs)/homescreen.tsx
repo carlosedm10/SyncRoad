@@ -91,27 +91,6 @@ export default function HomeScreen({ userId }: { userId: number }) {
 
     return () => clearInterval(kmInterval);
   }, [screen]);
-  //change to get it from backend
-  // Mock location updates (replace with your actual logic)
-  useEffect(() => {
-    if (screen === "home3") {
-      const updateLocations = () => {
-        // Mocked location updates
-        setDriverLocation({
-          lat: 40.7128 + Math.random() * 0.1,
-          lng: -74.006 + Math.random() * 0.1,
-        });
-        setFollowerLocation({
-          lat: 40.7306 + Math.random() * 0.1,
-          lng: -73.9866 + Math.random() * 0.1,
-        });
-      };
-
-      const locationInterval = setInterval(updateLocations, 5000); // Update every 5 seconds
-
-      return () => clearInterval(locationInterval);
-    }
-  }, [screen]);
 
   // Pantalla 1: Esperando guía
   if (screen === "home") {
