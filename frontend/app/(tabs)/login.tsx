@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  Button,
   StyleSheet,
   TouchableOpacity,
   Image,
@@ -50,7 +49,7 @@ export default function LoginScreen({
           keyboardDismissMode="interactive"
         >
           <Image
-            source={require("../../assets/images/logo.png")}
+            source={require("../../assets/images/logoapp.png")}
             style={styles.logo}
             resizeMode="contain"
           />
@@ -78,7 +77,9 @@ export default function LoginScreen({
             onChangeText={setPassword}
           />
 
-          <Button title="Sign In" onPress={handleLogin} />
+          <TouchableOpacity style={styles.signInButton} onPress={handleLogin}>
+            <Text style={styles.signInButtonText}>Sign In</Text>
+          </TouchableOpacity>
         </ScrollView>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
@@ -119,5 +120,19 @@ const styles = StyleSheet.create({
     width: 250,
     height: 250,
     marginBottom: 20,
+  },
+  signInButton: {
+    backgroundColor: "#001F54", // Updated to navy blue
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 10,
+    alignItems: "center",
+    width: "80%",
+    marginTop: 10,
+  },
+  signInButtonText: {
+    color: "#FFF", // Text color for the button
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
