@@ -17,6 +17,15 @@ export default function HomeScreen({ userId }: { userId: number }) {
   const [ahorrado, setAhorrado] = useState(0);
   const [kmOptimizados, setKmOptimizados] = useState(0);
   const translateX = useRef(new Animated.Value(0)).current;
+  const [driverLocation, setDriverLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+  const [followerLocation, setFollowerLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+  const [userName, setUserName] = useState<string>("Jorge");
 
   useEffect(() => {
     if (screen === "home") {
@@ -32,7 +41,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
             duration: 2000,
             useNativeDriver: true,
           }),
-        ]),
+        ])
       ).start();
     }
   }, [screen]);
@@ -171,7 +180,11 @@ export default function HomeScreen({ userId }: { userId: number }) {
           <Text style={styles.followerText}>Follower</Text>
         </TouchableOpacity>
         <View style={styles.mapContainer}>
-          <MapComponent />
+          <MapComponent
+            driverLocation={driverLocation}
+            followerLocation={followerLocation}
+            userName={userName}
+          />
         </View>
         <TouchableOpacity
           style={styles.endButton}
