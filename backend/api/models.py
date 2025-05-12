@@ -8,7 +8,6 @@ from sqlalchemy import (
     Boolean,
     Float,
     DateTime,
-    Table,
     ForeignKey,
     create_engine,
 )
