@@ -6,9 +6,11 @@ import {
   StyleSheet,
   Animated,
   Alert,
+  Platform,
 } from "react-native";
 import { getPosition, updateDriver } from "./routing";
 import MapComponent from "@/components/Maps";
+import ExpoMaps from "@/components/ExpoMaps";
 
 export default function HomeScreen({ userId }: { userId: number }) {
   const [screen, setScreen] = useState<"home0" | "home" | "home2" | "home3">(
@@ -136,8 +138,17 @@ export default function HomeScreen({ userId }: { userId: number }) {
         <TouchableOpacity style={styles.followerButton}>
           <Text style={styles.followerText}>Follower</Text>
         </TouchableOpacity>
+        
         <View style={styles.mapContainer}>
-          <MapComponent />
+          {Platform.OS === "web" ? (
+            <MapComponent
+              driverLocation={driverLocation}
+              followerLocation={followerLocation}
+              userName={userName}
+            />
+          ) : (
+            <ExpoMaps />
+          )}
         </View>
         <View style={styles.infoBox}>
           <Text style={styles.infoText}>
@@ -180,11 +191,16 @@ export default function HomeScreen({ userId }: { userId: number }) {
           <Text style={styles.followerText}>Follower</Text>
         </TouchableOpacity>
         <View style={styles.mapContainer}>
-          <MapComponent
-            driverLocation={driverLocation}
-            followerLocation={followerLocation}
-            userName={userName}
-          />
+          {Platform.OS === "web" ? (
+            console.log("web"),
+            <MapComponent
+              driverLocation={driverLocation}
+              followerLocation={followerLocation}
+              userName={userName}
+            />
+          ) : (
+            <ExpoMaps />
+          )}
         </View>
         <TouchableOpacity
           style={styles.endButton}
