@@ -1,3 +1,4 @@
+import json
 import threading
 import socket
 from datetime import datetime
@@ -5,25 +6,29 @@ from sqlalchemy.orm import Session
 from api.models import Location, User, get_db
 import time
 
-UDP_PORT = 5005  # The same port your Pi sends to
-LISTEN_IP = "0.0.0.0"  # Listen on all interfaces
+UDP_PORT_IN = 5005  # The same port your Pi sends to
+UDP_IP = "0.0.0.0"  # Local IP
+
+UPD_PORT_OUT = 5006
 
 
-def start_udp_listener(app, db_session_factory):
+def udp_listener(app, db_session_factory):
     def listen():
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.bind((LISTEN_IP, UDP_PORT))
-        print(f"✅ Listening for UDP data on port {UDP_PORT}...")
+        sock.bind((UDP_IP, UDP_PORT_IN))
+        print(f"✅ Listening for UDP data on {UDP_IP}:{UDP_PORT_IN}...")
 
         while True:
             try:
                 data, addr = sock.recvfrom(1024)  # Buffer size
                 decoded = data.decode("utf-8").strip()
-                print(f"📡 Received: {decoded} from {addr}")
-                lat, lon = map(float, decoded.split(","))
-
-                # For testing, let's assume it's always user_id = 1
-                user_id = 1
+                print(f"📡 Received: {data} from {addr}")
+                coords = json.loads(decoded)
+                user_id, lat, lon = (
+                    coords["user_id"],
+                    coords["lat"],
+                    coords["lon"],
+                )
 
                 db: Session = db_session_factory()
                 user = db.query(User).filter_by(id=user_id).first()
@@ -51,3 +56,10 @@ def start_udp_listener(app, db_session_factory):
 
     thread = threading.Thread(target=listen, daemon=True)
     thread.start()
+
+
+def udp_sender(flag: bool):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    dest = ("host.docker.internal", UPD_PORT_OUT)
+    sock.sendto(str(flag).encode(), dest)
+    print(f"\n✅ Sent flag={flag} → {dest}")
