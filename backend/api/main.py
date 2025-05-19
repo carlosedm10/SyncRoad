@@ -1,6 +1,7 @@
 # main.py
 import asyncio
 from datetime import datetime
+from api.raspberry import start_udp_listener
 from fastapi import (
     FastAPI,
     Depends,
@@ -15,6 +16,7 @@ from api.models import (
     Base,
     DriveSession,
     LocationData,
+    SessionLocal,
     UserCredentials,
     DriverData,
     ConnectionData,
@@ -347,3 +349,12 @@ def connect_rpi_wifi(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Exception: {str(e)}")
     return {"message": f"Connected to WiFi SSID '{wifi_data.ssid}' successfully"}
+
+
+# ------------------------------------------------------------------------------
+
+
+@app.on_event("startup")
+def startup_event():
+
+    start_udp_listener(app, SessionLocal)
