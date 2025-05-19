@@ -83,9 +83,7 @@ manager = ConnectionManager()
 @app.get("/")
 def read_root():
     """Example endpoint to check if the server is running."""
-    return (
-        "Hello, there is nothing intereseting here. VISIT: http://localhost:8000/docs"
-    )
+    return "Hello, there is nothing intereseting here. VISIT: http://localhost:8000/docs"
 
 
 @app.post("/create-user")
@@ -111,7 +109,9 @@ def login(user_data: UserCredentials, db: Session = Depends(get_db)):
     """Endpoint to log in a user."""
     user = db.query(User).filter(User.email == user_data.email).first()
     if not user:
-        raise HTTPException(status_code=404, detail="User not found. Please sign up.")
+        raise HTTPException(
+            status_code=404, detail="User not found. Please sign up."
+        )
     if not pwd_context.verify(user_data.password, user.password):
         raise HTTPException(status_code=401, detail="Incorrect password")
     return {"user_id": user.id, "logged": True}
@@ -127,7 +127,9 @@ def get_user_info(user_id: int, db: Session = Depends(get_db)):
 
 
 @app.post("/update-location/")  # NOTE: uncomment this for testing in Local
-def update_location(location_data: LocationData, db: Session = Depends(get_db)):
+def update_location(
+    location_data: LocationData, db: Session = Depends(get_db)
+):
     """Method that will connect to raspberry pi and update the location of the user"""
 
     user = db.query(User).filter(User.id == location_data.user_id).first()
@@ -161,7 +163,9 @@ def get_locations(user_id: int, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="Internal Error")
 
-    last_location = db.query(Location).filter(Location.user_id == user.id).first()
+    last_location = (
+        db.query(Location).filter(Location.user_id == user.id).first()
+    )
 
     if not last_location:
         raise HTTPException(status_code=404, detail="Location not found")
@@ -205,7 +209,9 @@ def update_driver(driver_data: DriverData, db: Session = Depends(get_db)):
             else:
                 # Update driver in existing session if needed
                 session = (
-                    db.query(DriveSession).filter_by(id=user.drive_session_id).first()
+                    db.query(DriveSession)
+                    .filter_by(id=user.drive_session_id)
+                    .first()
                 )
                 if session and driver_data.driver:
                     session.driver_id = user.id
@@ -213,12 +219,16 @@ def update_driver(driver_data: DriverData, db: Session = Depends(get_db)):
             # If user is linked to a session but now wants to unlink, delete the session
             if user.drive_session_id:
                 session = (
-                    db.query(DriveSession).filter_by(id=user.drive_session_id).first()
+                    db.query(DriveSession)
+                    .filter_by(id=user.drive_session_id)
+                    .first()
                 )
                 if session:
                     # Unlink all users connected to this session
                     users_in_session = (
-                        db.query(User).filter_by(drive_session_id=session.id).all()
+                        db.query(User)
+                        .filter_by(drive_session_id=session.id)
+                        .all()
                     )
                     for u in users_in_session:
                         u.drive_session_id = None

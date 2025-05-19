@@ -12,7 +12,7 @@ import MapComponent from "@/components/Maps";
 
 export default function HomeScreen({ userId }: { userId: number }) {
   const [screen, setScreen] = useState<"home0" | "home" | "home2" | "home3">(
-    "home0",
+    "home0"
   );
   const [ahorrado, setAhorrado] = useState(0);
   const [kmOptimizados, setKmOptimizados] = useState(0);
@@ -41,7 +41,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
             duration: 2000,
             useNativeDriver: true,
           }),
-        ]),
+        ])
       ).start();
     }
   }, [screen]);
@@ -157,7 +157,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
             <TouchableOpacity
               style={styles.yesButton}
               onPress={async () => {
-                const response = await updateDriver(userId, true, false);
+                const response = await updateDriver(userId, false, true);
                 if (response?.updated) {
                   setScreen("home3");
                 } else {
@@ -199,6 +199,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
             setScreen("home0"); // ✅ FINALIZA Y VUELVE A PANTALLA 0
             setAhorrado(0);
             setKmOptimizados(0);
+            updateDriver(userId, false, false);
           }}
         >
           <Text style={styles.endButtonText}>Finalizar trayecto</Text>

@@ -1,7 +1,7 @@
 import { User } from "./types";
 
 export async function loginUser(
-  userData: User,
+  userData: User
 ): Promise<{ logged: boolean; user_id?: number; error?: string }> {
   try {
     const response = await fetch("http://localhost:8000/login", {
@@ -26,7 +26,7 @@ export async function loginUser(
 export async function getPosition(userId: number) {
   try {
     const response = await fetch(
-      `http://localhost:8000/get-locations/${userId}`,
+      `http://localhost:8000/get-locations/${userId}`
     );
     if (response.ok) {
       return await response.json(); // contiene lat, long, timestamp
@@ -40,8 +40,8 @@ export async function getPosition(userId: number) {
 
 export async function updateDriver(
   userId: number,
-  linked: boolean,
   isDriver: boolean,
+  linked: boolean
 ) {
   try {
     const response = await fetch("http://localhost:8000/update-driver/", {
