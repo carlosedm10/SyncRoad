@@ -12,7 +12,7 @@ import MapComponent from "@/components/Maps";
 
 export default function HomeScreen({ userId }: { userId: number }) {
   const [screen, setScreen] = useState<"home0" | "home" | "home2" | "home3">(
-    "home0"
+    "home0",
   );
   const [ahorrado, setAhorrado] = useState(0);
   const [kmOptimizados, setKmOptimizados] = useState(0);
@@ -41,7 +41,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
             duration: 2000,
             useNativeDriver: true,
           }),
-        ])
+        ]),
       ).start();
     }
   }, [screen]);

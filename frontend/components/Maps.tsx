@@ -48,7 +48,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ userName }) => {
         },
         (error) => {
           console.error("Error getting user location:", error);
-        }
+        },
       );
     } else {
       console.error("Geolocation is not supported by this browser.");
@@ -69,7 +69,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ userName }) => {
         } else {
           console.error(`Error fetching directions ${result}`, status);
         }
-      }
+      },
     );
   };
 
