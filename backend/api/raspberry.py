@@ -6,17 +6,19 @@ from api.models import Location, User, get_db
 import time
 
 UDP_PORT = 5005  # The same port your Pi sends to
-LISTEN_IP = "0.0.0.0"  # Listen on all interfaces
+UDP_IP = "0.0.0.0"  # Local IP
 
 
 def start_udp_listener(app, db_session_factory):
     def listen():
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.bind((LISTEN_IP, UDP_PORT))
-        print(f"✅ Listening for UDP data on port {UDP_PORT}...")
+        sock.bind((UDP_IP, UDP_PORT))
+        print(f"✅ Listening for UDP data on {UDP_IP}:{UDP_PORT}...")
 
         while True:
+            print("HELLO")
             try:
+                print("IM HERE")
                 data, addr = sock.recvfrom(1024)  # Buffer size
                 decoded = data.decode("utf-8").strip()
                 print(f"📡 Received: {decoded} from {addr}")
