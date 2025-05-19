@@ -33,9 +33,7 @@ def udp_listener(app, db_session_factory):
                 db: Session = db_session_factory()
                 user = db.query(User).filter_by(id=user_id).first()
                 if user:
-                    location = (
-                        db.query(Location).filter_by(user_id=user_id).first()
-                    )
+                    location = db.query(Location).filter_by(user_id=user_id).first()
                     if location:
                         location.latitude = lat
                         location.longitude = lon
