@@ -126,7 +126,7 @@ export default function MapComponent({ screen }: { screen: string }) {
               left: userPixel.x + 7.5, // Center horizontally with marker
               width: Math.hypot(
                 driverPixel.x - userPixel.x,
-                driverPixel.y - userPixel.y
+                driverPixel.y - userPixel.y,
               ),
               height: 2,
               backgroundColor: "blue",
@@ -135,7 +135,7 @@ export default function MapComponent({ screen }: { screen: string }) {
                 {
                   rotate: `${Math.atan2(
                     driverPixel.y - userPixel.y,
-                    driverPixel.x - userPixel.x
+                    driverPixel.x - userPixel.x,
                   )}rad`,
                 },
               ],
