@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -76,9 +76,8 @@ export default function HomeScreen({ userId }: { userId: number }) {
 
   useEffect(() => {
     if (screen !== "home") return;
-
     const interval = setInterval(async () => {
-      const position = await getPosition(2); // TODO: this would be the driver
+      const position = await getPosition(2);
       if (position) {
         setScreen("home2");
       }
@@ -132,8 +131,8 @@ export default function HomeScreen({ userId }: { userId: number }) {
         <TouchableOpacity style={styles.followerButton}>
           <Text style={styles.followerText}>Follower</Text>
         </TouchableOpacity>
-        <View style={[styles.mapContainer, styles.centered]}>
-          <MapComponent screen={undefined} />
+        <View style={styles.mapContainer}>
+          <MapComponent screen={"home0"} />
         </View>
         <View style={styles.waitingContent}>
           <TouchableOpacity
@@ -154,7 +153,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
           <Text style={styles.followerText}>Follower</Text>
         </TouchableOpacity>
         <View style={styles.mapContainer}>
-          <MapComponent screen={undefined} />
+          <MapComponent screen={"home"} />
         </View>
         <View style={styles.waitingContent}>
           <Text style={styles.mainText}>Buscando guías cercanos...</Text>
@@ -175,7 +174,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
           <Text style={styles.followerText}>Follower</Text>
         </TouchableOpacity>
         <View style={styles.mapContainer}>
-          <MapComponent screen={undefined} />
+          <MapComponent screen={"home2"} />
         </View>
         <View style={styles.infoBox}>
           <Text style={styles.infoText}>
@@ -217,11 +216,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
           <Text style={styles.followerText}>Follower</Text>
         </TouchableOpacity>
         <View style={styles.mapContainer}>
-          <MapComponent
-            driverLocation={driverLocation}
-            followerLocation={followerLocation}
-            userName={userName}
-          />
+          <MapComponent screen={"home3"} />
         </View>
         <TouchableOpacity
           style={styles.endButton}
