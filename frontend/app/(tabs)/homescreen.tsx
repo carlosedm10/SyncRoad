@@ -25,7 +25,7 @@ const imageHeight = screenWidth * (imageOriginalHeight / imageOriginalWidth);
 // ✅ Función Haversine manual
 function getDistanceInMeters(
   coord1: { latitude: number; longitude: number },
-  coord2: { latitude: number; longitude: number }
+  coord2: { latitude: number; longitude: number },
 ): number {
   const R = 6371000; // Radio de la Tierra en metros
   const toRad = (deg: number) => (deg * Math.PI) / 180;
@@ -47,7 +47,7 @@ function getDistanceInMeters(
 
 export default function HomeScreen({ userId }: { userId: number }) {
   const [screen, setScreen] = useState<"home0" | "home" | "home2" | "home3">(
-    "home0"
+    "home0",
   );
   const [ahorrado, setAhorrado] = useState(0);
   const [kmOptimizados, setKmOptimizados] = useState(0);
@@ -63,7 +63,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
   const [userName, setUserName] = useState<string>("Jorge");
 
   const lastPosRef = useRef<{ latitude: number; longitude: number } | null>(
-    null
+    null,
   );
   const accumulatedMeters = useRef(0);
 
@@ -81,7 +81,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
             duration: 2000,
             useNativeDriver: true,
           }),
-        ])
+        ]),
       ).start();
     }
   }, [screen]);
