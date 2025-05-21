@@ -6,8 +6,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
   TouchableWithoutFeedback,
   Keyboard,
@@ -38,51 +36,46 @@ export default function LoginScreen({
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <ScrollView
-          contentContainerStyle={styles.container}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="interactive"
-        >
-          <Image
-            source={require("../../assets/images/logoapp.png")}
-            style={styles.logo}
-            resizeMode="contain"
-          />
+    <TouchableWithoutFeedback>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+      >
+        <Image
+          source={require("../../assets/images/logoapp.png")}
+          style={styles.logo}
+          resizeMode="contain"
+        />
 
-          {error ? (
-            <TouchableOpacity style={styles.forgotPassword}>
-              <Text style={styles.forgotPasswordText}>{error}</Text>
-            </TouchableOpacity>
-          ) : null}
-
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            autoCapitalize="none"
-            keyboardType="email-address"
-            value={email}
-            onChangeText={setEmail}
-          />
-
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
-
-          <TouchableOpacity style={styles.signInButton} onPress={handleLogin}>
-            <Text style={styles.signInButtonText}>Sign In</Text>
+        {error ? (
+          <TouchableOpacity style={styles.forgotPassword}>
+            <Text style={styles.forgotPasswordText}>{error}</Text>
           </TouchableOpacity>
-        </ScrollView>
-      </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
+        ) : null}
+
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          autoCapitalize="none"
+          keyboardType="email-address"
+          value={email}
+          onChangeText={setEmail}
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+        />
+
+        <TouchableOpacity style={styles.signInButton} onPress={handleLogin}>
+          <Text style={styles.signInButtonText}>Sign In</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </TouchableWithoutFeedback>
   );
 }
 
