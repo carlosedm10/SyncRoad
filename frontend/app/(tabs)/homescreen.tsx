@@ -12,10 +12,17 @@ import MapComponent from "@/components/Maps";
 
 export default function HomeScreen({ userId }: { userId: number }) {
   const [screen, setScreen] = useState<"home0" | "home" | "home2" | "home3">(
-    "home0",
+    "home0"
   );
   const [ahorrado, setAhorrado] = useState(0);
   const [kmOptimizados, setKmOptimizados] = useState(0);
+  const [previousCoords, setPreviousCoords] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+  const [distanceAccum, setDistanceAccum] = useState(0);
+  const [kmAccum, setKmAccum] = useState(0);
+
   const translateX = useRef(new Animated.Value(0)).current;
   const [driverLocation, setDriverLocation] = useState<{
     lat: number;
@@ -41,7 +48,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
             duration: 2000,
             useNativeDriver: true,
           }),
-        ]),
+        ])
       ).start();
     }
   }, [screen]);
@@ -62,35 +69,67 @@ export default function HomeScreen({ userId }: { userId: number }) {
   useEffect(() => {
     if (screen !== "home3") return;
 
-    const interval = setInterval(() => {
-      setAhorrado((prev) => prev + 1);
-      setKmOptimizados((prev) => prev + 1);
-    }, 60000);
+    const interval = setInterval(async () => {
+      try {
+        const location = await getPosition(userId);
+        if (!location) return;
+
+        const { lat, lng } = location;
+
+        if (previousCoords) {
+          const distance = calculateDistance(
+            previousCoords.lat,
+            previousCoords.lng,
+            lat,
+            lng
+          );
+
+          const newTotal = distanceAccum + distance;
+
+          if (newTotal >= 10) {
+            const kmToAdd = Math.floor(newTotal / 10);
+            const remaining = newTotal % 10;
+
+            const newKmTotal = kmAccum + kmToAdd;
+            const eurosToAdd = Math.floor(newKmTotal / 3);
+            const remainingKm = newKmTotal % 3;
+
+            setKmOptimizados((prev) => prev + kmToAdd);
+            setAhorrado((prev) => prev + eurosToAdd);
+            setKmAccum(remainingKm);
+            setDistanceAccum(remaining);
+          } else {
+            setDistanceAccum(newTotal);
+          }
+        }
+
+        setPreviousCoords({ lat, lng });
+      } catch (err) {
+        console.error("Error obteniendo posición:", err);
+      }
+    }, 1000);
 
     return () => clearInterval(interval);
-  }, [screen]);
+  }, [screen, previousCoords, distanceAccum, kmAccum]);
 
-  useEffect(() => {
-    if (screen !== "home3") return;
+  const calculateDistance = (
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ): number => {
+    const R = 6371000; // metros
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
 
-    const euroInterval = setInterval(() => {
-      setAhorrado((prev) => prev + 1);
-    }, 8000);
-
-    return () => clearInterval(euroInterval);
-  }, [screen]);
-
-  useEffect(() => {
-    if (screen !== "home3") return;
-
-    const kmInterval = setInterval(() => {
-      setKmOptimizados((prev) => prev + 1);
-    }, 2000);
-
-    return () => clearInterval(kmInterval);
-  }, [screen]);
-
-  // Pantalla 0: Pantalla inicial
   if (screen === "home0") {
     return (
       <View style={styles.container}>
@@ -112,7 +151,6 @@ export default function HomeScreen({ userId }: { userId: number }) {
     );
   }
 
-  // Pantalla 1: Esperando guía
   if (screen === "home") {
     return (
       <View style={styles.container}>
@@ -136,7 +174,6 @@ export default function HomeScreen({ userId }: { userId: number }) {
     );
   }
 
-  // Pantalla 2: ¿Quieres seguirle?
   if (screen === "home2") {
     return (
       <View style={styles.container}>
@@ -157,7 +194,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
             <TouchableOpacity
               style={styles.yesButton}
               onPress={async () => {
-                const response = await updateDriver(userId, false, true);
+                const response = await updateDriver(userId, true, false);
                 if (response?.updated) {
                   setScreen("home3");
                 } else {
@@ -169,7 +206,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.noButton}
-              onPress={() => setScreen("home0")} // ✅ CAMBIADO A PANTALLA 0
+              onPress={() => setScreen("home0")}
             >
               <Text style={styles.buttonLabel}>NO</Text>
             </TouchableOpacity>
@@ -179,7 +216,6 @@ export default function HomeScreen({ userId }: { userId: number }) {
     );
   }
 
-  // Pantalla 3: Siguiendo al guía
   if (screen === "home3") {
     return (
       <View style={styles.container}>
@@ -196,10 +232,12 @@ export default function HomeScreen({ userId }: { userId: number }) {
         <TouchableOpacity
           style={styles.endButton}
           onPress={() => {
-            setScreen("home0"); // ✅ FINALIZA Y VUELVE A PANTALLA 0
+            setScreen("home0");
             setAhorrado(0);
             setKmOptimizados(0);
-            updateDriver(userId, false, false);
+            setPreviousCoords(null);
+            setDistanceAccum(0);
+            setKmAccum(0);
           }}
         >
           <Text style={styles.endButtonText}>Finalizar trayecto</Text>
@@ -230,7 +268,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
   return null;
 }
 
-// 🎨 ESTILOS
+// 🎨 estilos se mantienen iguales
 const styles = StyleSheet.create({
   mapContainer: {
     width: "100%",
