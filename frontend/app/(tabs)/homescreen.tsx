@@ -4,11 +4,23 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
+  Dimensions,
   Animated,
   Alert,
 } from "react-native";
 import { getPosition, updateDriver } from "./routing";
 import MapComponent from "@/components/Maps";
+
+import resolveAssetSource from "react-native/Libraries/Image/resolveAssetSource";
+const imageSource = require("../../assets/images/MapaAntenas.png");
+
+const { width: imageOriginalWidth, height: imageOriginalHeight } =
+  resolveAssetSource(imageSource);
+
+const { width: screenWidth } = Dimensions.get("window");
+
+// Calcula el alto proporcional para mostrar la imagen entera
+const imageHeight = screenWidth * (imageOriginalHeight / imageOriginalWidth);
 
 // ✅ Función Haversine manual
 function getDistanceInMeters(
@@ -259,16 +271,16 @@ export default function HomeScreen({ userId }: { userId: number }) {
 // 🎨 ESTILOS (puedes mantener los tuyos sin cambios)
 const styles = StyleSheet.create({
   mapContainer: {
-    width: "90%",
-    height: 350,
-    marginTop: 60,
+    width: "center%",
+    height: imageHeight,
+    marginTop: 100,
     alignSelf: "center",
     overflow: "hidden",
   },
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingTop: 60,
+    paddingTop: 90,
     paddingHorizontal: 20,
     position: "relative",
     alignItems: "center",
@@ -379,7 +391,7 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   followingText: {
-    marginTop: -30,
+    marginTop: 60,
     marginBottom: 20,
     fontSize: 16,
     fontWeight: "bold",
@@ -416,7 +428,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 120,
     borderRadius: 20,
     alignSelf: "center",
-    marginBottom: 0,
+    marginBottom: -100,
   },
   searchButtonText: {
     color: "#fff",

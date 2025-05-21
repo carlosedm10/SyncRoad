@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { View, ImageBackground, Dimensions } from "react-native";
 import resolveAssetSource from "react-native/Libraries/Image/resolveAssetSource";
 
-const imageSource = require("../assets/images/Mapa Antenas.png");
+const imageSource = require("../assets/images/MapaAntenas.png");
 const { width: screenWidth } = Dimensions.get("window");
 
 const { width: imageOriginalWidth, height: imageOriginalHeight } =
@@ -87,6 +87,7 @@ export default function MapComponent({ screen }: { screen: string }) {
       <ImageBackground
         source={imageSource}
         style={{ width: "100%", height: "100%" }}
+        resizeMode="contain"
       >
         {/* User Marker */}
         <View
@@ -125,7 +126,7 @@ export default function MapComponent({ screen }: { screen: string }) {
               left: userPixel.x + 7.5, // Center horizontally with marker
               width: Math.hypot(
                 driverPixel.x - userPixel.x,
-                driverPixel.y - userPixel.y,
+                driverPixel.y - userPixel.y
               ),
               height: 2,
               backgroundColor: "blue",
@@ -134,7 +135,7 @@ export default function MapComponent({ screen }: { screen: string }) {
                 {
                   rotate: `${Math.atan2(
                     driverPixel.y - userPixel.y,
-                    driverPixel.x - userPixel.x,
+                    driverPixel.x - userPixel.x
                   )}rad`,
                 },
               ],
