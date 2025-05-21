@@ -39,7 +39,7 @@ class LocationData(BaseModel):
     timestamp: datetime
 
 
-class DriverData(BaseModel):
+class LinkData(BaseModel):
     user_id: int
     driver: bool
     linked: bool

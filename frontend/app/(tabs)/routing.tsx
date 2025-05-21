@@ -44,7 +44,7 @@ export async function updateDriver(
   linked: boolean,
 ) {
   try {
-    const response = await fetch("http://localhost:8000/update-driver/", {
+    const response = await fetch("http://localhost:8000/update-link-session/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

@@ -58,7 +58,7 @@ def udp_listener(app, db_session_factory):
     thread.start()
 
 
-def udp_sender(flag: bool):
+def udp_sender(flag: str | bool):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     dest = ("host.docker.internal", UPD_PORT_OUT)
     sock.sendto(str(flag).encode(), dest)
