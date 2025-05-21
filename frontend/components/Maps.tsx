@@ -1,7 +1,7 @@
 import { getPosition } from "@/app/(tabs)/routing";
 import { useEffect, useState } from "react";
-import { View, Image, ImageBackground, Dimensions } from "react-native";
-import resolveAssetSource from "react-native/Libraries/Image/resolveAssetSource"; // ✅ Import correcto
+import { View, ImageBackground, Dimensions } from "react-native";
+import resolveAssetSource from "react-native/Libraries/Image/resolveAssetSource";
 
 const imageSource = require("../assets/images/Mapa Antenas.png");
 const { width: screenWidth } = Dimensions.get("window");
@@ -30,24 +30,57 @@ function latLonToPixel(lat: number, lon: number) {
   return { x, y };
 }
 
-export default function MapComponent({ screen }) {
+export default function MapComponent({ screen }: { screen: string }) {
   // Simulando datos estáticos (puedes cambiar por datos reales con getPosition)
-  const userLat = 39.479791;
-  const userLon = -0.343885;
-  const driverLat = 39.479584;
-  const driverLon = -0.34317;
+  const [userLat, setUserLat] = useState<number | null>(null);
+  const [userLon, setUserLon] = useState<number | null>(null);
+  const [driverLat, setDriverLat] = useState<number | null>(null);
+  const [driverLon, setDriverLon] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchPositions = async () => {
+      const userPosition = await getPosition(1); // User position
+      const driverPosition = await getPosition(2); // Driver position
+
+      if (userPosition) {
+        setUserLat(userPosition.latitude);
+        setUserLon(userPosition.longitude);
+      }
+      if (driverPosition) {
+        setDriverLat(driverPosition.latitude);
+        setDriverLon(driverPosition.longitude);
+      }
+    };
+
+    fetchPositions();
+    const interval = setInterval(fetchPositions, 5000); // Update every 5 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   const [userPixel, setUserPixel] = useState({ x: 0, y: 0 });
   const [driverPixel, setDriverPixel] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     if (userLat && userLon) {
-      setUserPixel(latLonToPixel(userLat, userLon));
+      const pixel = latLonToPixel(userLat, userLon);
+      setUserPixel({
+        x: pixel.x - 30,
+        y: pixel.y + 25,
+      });
     }
-    if ((screen === "home2" || screen === "home3") && driverLat && driverLon) {
-      setDriverPixel(latLonToPixel(driverLat, driverLon));
+    if (screen === "home2" || screen === "home3") {
+      if (driverLat && driverLon) {
+        const pixel = latLonToPixel(driverLat, driverLon);
+        setDriverPixel({
+          x: pixel.x + 20,
+          y: pixel.y + 8,
+        });
+      }
     }
   }, [userLat, userLon, driverLat, driverLon, screen]);
+
+  console.log(screen);
 
   return (
     <View style={{ width: screenWidth, height: imageHeight }}>
@@ -59,8 +92,8 @@ export default function MapComponent({ screen }) {
         <View
           style={{
             position: "absolute",
-            left: userPixel.x - 7.5,
-            top: userPixel.y - 7.5,
+            left: userPixel.x,
+            top: userPixel.y,
             width: 15,
             height: 15,
             borderRadius: 7.5,
@@ -73,12 +106,12 @@ export default function MapComponent({ screen }) {
           <View
             style={{
               position: "absolute",
-              left: driverPixel.x - 7.5,
-              top: driverPixel.y - 7.5,
+              left: driverPixel.x,
+              top: driverPixel.y,
               width: 15,
               height: 15,
               borderRadius: 7.5,
-              backgroundColor: "red",
+              backgroundColor: "blue",
             }}
           />
         )}
@@ -88,22 +121,24 @@ export default function MapComponent({ screen }) {
           <View
             style={{
               position: "absolute",
-              top: Math.min(userPixel.y, driverPixel.y),
-              left: Math.min(userPixel.x, driverPixel.x),
+              top: userPixel.y + 7.5, // Center vertically with marker
+              left: userPixel.x + 7.5, // Center horizontally with marker
               width: Math.hypot(
                 driverPixel.x - userPixel.x,
-                driverPixel.y - userPixel.y
+                driverPixel.y - userPixel.y,
               ),
               height: 2,
               backgroundColor: "blue",
+              transformOrigin: "0 0",
               transform: [
                 {
                   rotate: `${Math.atan2(
                     driverPixel.y - userPixel.y,
-                    driverPixel.x - userPixel.x
+                    driverPixel.x - userPixel.x,
                   )}rad`,
                 },
               ],
+              zIndex: -1, // Add this to ensure line appears below markers
             }}
           />
         )}
