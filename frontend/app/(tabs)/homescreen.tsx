@@ -191,7 +191,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
         <View style={styles.infoBox}>
           <Text style={styles.infoText}>
             Hemos encontrado al guía{"\n"}
-            Platooning con destino Buenos Aires.
+            Platooning con destino a Teleco.
           </Text>
           <Text style={styles.boldText}>¿Quieres seguirle?</Text>
 
