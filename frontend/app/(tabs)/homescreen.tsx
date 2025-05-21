@@ -10,19 +10,35 @@ import {
 import { getPosition, updateDriver } from "./routing";
 import MapComponent from "@/components/Maps";
 
+// ✅ Función Haversine manual
+function getDistanceInMeters(
+  coord1: { latitude: number; longitude: number },
+  coord2: { latitude: number; longitude: number }
+): number {
+  const R = 6371000; // Radio de la Tierra en metros
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+
+  const dLat = toRad(coord2.latitude - coord1.latitude);
+  const dLon = toRad(coord2.longitude - coord1.longitude);
+
+  const lat1 = toRad(coord1.latitude);
+  const lat2 = toRad(coord2.latitude);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c;
+}
+
 export default function HomeScreen({ userId }: { userId: number }) {
   const [screen, setScreen] = useState<"home0" | "home" | "home2" | "home3">(
     "home0"
   );
   const [ahorrado, setAhorrado] = useState(0);
   const [kmOptimizados, setKmOptimizados] = useState(0);
-  const [previousCoords, setPreviousCoords] = useState<{
-    lat: number;
-    lng: number;
-  } | null>(null);
-  const [distanceAccum, setDistanceAccum] = useState(0);
-  const [kmAccum, setKmAccum] = useState(0);
-
   const translateX = useRef(new Animated.Value(0)).current;
   const [driverLocation, setDriverLocation] = useState<{
     lat: number;
@@ -33,6 +49,11 @@ export default function HomeScreen({ userId }: { userId: number }) {
     lng: number;
   } | null>(null);
   const [userName, setUserName] = useState<string>("Jorge");
+
+  const lastPosRef = useRef<{ latitude: number; longitude: number } | null>(
+    null
+  );
+  const accumulatedMeters = useRef(0);
 
   useEffect(() => {
     if (screen === "home") {
@@ -66,70 +87,45 @@ export default function HomeScreen({ userId }: { userId: number }) {
     return () => clearInterval(interval);
   }, [screen, userId]);
 
+  // 🔁 Lógica del contador real con posiciones
   useEffect(() => {
     if (screen !== "home3") return;
 
     const interval = setInterval(async () => {
-      try {
-        const location = await getPosition(userId);
-        if (!location) return;
+      const data = await getPosition(1);
 
-        const { lat, lng } = location;
+      if (data?.latitude && data?.longitude) {
+        const current = { latitude: data.latitude, longitude: data.longitude };
 
-        if (previousCoords) {
-          const distance = calculateDistance(
-            previousCoords.lat,
-            previousCoords.lng,
-            lat,
-            lng
-          );
+        if (lastPosRef.current) {
+          const dist = getDistanceInMeters(lastPosRef.current, current);
+          accumulatedMeters.current += dist;
 
-          const newTotal = distanceAccum + distance;
+          if (accumulatedMeters.current >= 5) {
+            const addedKm = Math.floor(accumulatedMeters.current / 5);
+            setKmOptimizados((prev) => {
+              const newKm = prev + addedKm;
 
-          if (newTotal >= 10) {
-            const kmToAdd = Math.floor(newTotal / 10);
-            const remaining = newTotal % 10;
+              const eurosExtra = Math.floor(newKm / 3) - Math.floor(prev / 3);
+              if (eurosExtra > 0) {
+                setAhorrado((prevE) => prevE + eurosExtra);
+              }
 
-            const newKmTotal = kmAccum + kmToAdd;
-            const eurosToAdd = Math.floor(newKmTotal / 3);
-            const remainingKm = newKmTotal % 3;
+              return newKm;
+            });
 
-            setKmOptimizados((prev) => prev + kmToAdd);
-            setAhorrado((prev) => prev + eurosToAdd);
-            setKmAccum(remainingKm);
-            setDistanceAccum(remaining);
-          } else {
-            setDistanceAccum(newTotal);
+            accumulatedMeters.current %= 5;
           }
         }
 
-        setPreviousCoords({ lat, lng });
-      } catch (err) {
-        console.error("Error obteniendo posición:", err);
+        lastPosRef.current = current;
       }
-    }, 1000);
+    }, 5000);
 
     return () => clearInterval(interval);
-  }, [screen, previousCoords, distanceAccum, kmAccum]);
+  }, [screen, userId]);
 
-  const calculateDistance = (
-    lat1: number,
-    lon1: number,
-    lat2: number,
-    lon2: number
-  ): number => {
-    const R = 6371000; // metros
-    const dLat = ((lat2 - lat1) * Math.PI) / 180;
-    const dLon = ((lon2 - lon1) * Math.PI) / 180;
-    const a =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLon / 2) ** 2;
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  };
-
+  // UI PANTALLAS
   if (screen === "home0") {
     return (
       <View style={styles.container}>
@@ -157,11 +153,9 @@ export default function HomeScreen({ userId }: { userId: number }) {
         <TouchableOpacity style={styles.followerButton}>
           <Text style={styles.followerText}>Follower</Text>
         </TouchableOpacity>
-
         <View style={styles.mapContainer}>
           <MapComponent />
         </View>
-
         <View style={styles.waitingContent}>
           <Text style={styles.mainText}>Buscando guías cercanos...</Text>
           <Animated.Image
@@ -235,9 +229,8 @@ export default function HomeScreen({ userId }: { userId: number }) {
             setScreen("home0");
             setAhorrado(0);
             setKmOptimizados(0);
-            setPreviousCoords(null);
-            setDistanceAccum(0);
-            setKmAccum(0);
+            accumulatedMeters.current = 0;
+            lastPosRef.current = null;
           }}
         >
           <Text style={styles.endButtonText}>Finalizar trayecto</Text>
@@ -268,7 +261,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
   return null;
 }
 
-// 🎨 estilos se mantienen iguales
+// 🎨 ESTILOS (puedes mantener los tuyos sin cambios)
 const styles = StyleSheet.create({
   mapContainer: {
     width: "100%",
