@@ -50,7 +50,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
     if (screen !== "home") return;
 
     const interval = setInterval(async () => {
-      const position = await getPosition(userId);
+      const position = await getPosition(2); // TODO: this would be the driver
       if (position) {
         setScreen("home2");
       }
@@ -157,7 +157,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
             <TouchableOpacity
               style={styles.yesButton}
               onPress={async () => {
-                const response = await updateDriver(userId, false, true);
+                const response = await updateDriver(userId, false, false);
                 if (response?.updated) {
                   setScreen("home3");
                 } else {
