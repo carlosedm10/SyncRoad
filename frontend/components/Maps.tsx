@@ -1,20 +1,17 @@
 import { getPosition } from "@/app/(tabs)/routing";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { View, Image, ImageBackground, Dimensions } from "react-native";
-import Svg, { Line } from "react-native-svg";
-import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
+import resolveAssetSource from "react-native/Libraries/Image/resolveAssetSource"; // ✅ Import correcto
 
-const imageSource = require("assets/images/Mapa Antenas.png");
+const imageSource = require("../assets/images/Mapa Antenas.png");
 const { width: screenWidth } = Dimensions.get("window");
-console.log("Screen Width:", screenWidth);
-console.log("Image Source:", imageSource);
-console.log("Image Source URI:", imageSource.uri);
-console.log("Image Source Width:", imageSource.width);
-console.log("Image Source Height:", imageSource.height);
-console.log("Image Source Dimensions:", Image.resolveAssetSource(imageSource));
+
 const { width: imageOriginalWidth, height: imageOriginalHeight } =
-  Image.resolveAssetSource(imageSource);
+  resolveAssetSource(imageSource); // ✅ Usado correctamente
 const imageHeight = screenWidth * (imageOriginalHeight / imageOriginalWidth);
+
+console.log("Screen Width:", screenWidth);
+console.log("Image Source Dimensions:", resolveAssetSource(imageSource));
 
 const topLeft = { lat: 39.4800046, lon: -0.343775 };
 const topRight = { lat: 39.47981, lon: -0.343041 };
@@ -34,34 +31,23 @@ function latLonToPixel(lat: number, lon: number) {
 }
 
 export default function MapComponent({ screen }) {
-  const userPosition = getPosition(1);
-  console.log("User Position:", userPosition);
-
-  const driverPosition = getPosition(2);
-  console.log("Driver Position:", driverPosition);
-
-  //const userLat = userPosition.lat;
-  //const userLon = userPosition.lon;
-  //const driverLat = driverPosition.lat;
-  //const driverLon = driverPosition.lon;
-
+  // Simulando datos estáticos (puedes cambiar por datos reales con getPosition)
   const userLat = 39.479791;
   const userLon = -0.343885;
   const driverLat = 39.479584;
   const driverLon = -0.34317;
 
   const [userPixel, setUserPixel] = useState({ x: 0, y: 0 });
-
   const [driverPixel, setDriverPixel] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     if (userLat && userLon) {
       setUserPixel(latLonToPixel(userLat, userLon));
     }
-    if (screen === undefined && driverLat && driverLon) {
+    if ((screen === "home2" || screen === "home3") && driverLat && driverLon) {
       setDriverPixel(latLonToPixel(driverLat, driverLon));
     }
-  }, [userLat, userLon, driverLat, driverLon]);
+  }, [userLat, userLon, driverLat, driverLon, screen]);
 
   return (
     <View style={{ width: screenWidth, height: imageHeight }}>
@@ -97,26 +83,29 @@ export default function MapComponent({ screen }) {
           />
         )}
 
-        {/* Connecting Line */}
+        {/* Linea entre ellos */}
         {(screen === "home2" || screen === "home3") && (
-          <Svg
+          <View
             style={{
               position: "absolute",
-              top: 0,
-              left: 0,
-              width: screenWidth,
-              height: imageHeight,
+              top: Math.min(userPixel.y, driverPixel.y),
+              left: Math.min(userPixel.x, driverPixel.x),
+              width: Math.hypot(
+                driverPixel.x - userPixel.x,
+                driverPixel.y - userPixel.y
+              ),
+              height: 2,
+              backgroundColor: "blue",
+              transform: [
+                {
+                  rotate: `${Math.atan2(
+                    driverPixel.y - userPixel.y,
+                    driverPixel.x - userPixel.x
+                  )}rad`,
+                },
+              ],
             }}
-          >
-            <Line
-              x1={userPixel.x}
-              y1={userPixel.y}
-              x2={driverPixel.x}
-              y2={driverPixel.y}
-              stroke="blue"
-              strokeWidth={2}
-            />
-          </Svg>
+          />
         )}
       </ImageBackground>
     </View>
