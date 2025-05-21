@@ -40,8 +40,8 @@ export async function getPosition(userId: number) {
 
 export async function updateDriver(
   userId: number,
-  linked: boolean,
   isDriver: boolean,
+  linked: boolean,
 ) {
   try {
     const response = await fetch("http://localhost:8000/update-driver/", {

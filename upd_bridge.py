@@ -3,7 +3,7 @@
 import socket, threading, time
 
 PI_IP = "10.42.0.1"
-MAC_IP = "10.42.0.150"
+MAC_IP = "10.236.19.37"
 
 # Incoming from Pi
 MAC_PORT_FROM_PI = 5004

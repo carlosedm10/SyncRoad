@@ -10,7 +10,7 @@ services:
     ports:
       - "5432:5432"
     networks:
-      - appnet  # Attach to the custom network
+      - appnet 
     command: [ "postgres", "-c", "log_statement=all" ] # Debugging
 
   backend:
@@ -23,7 +23,7 @@ services:
       - ./backend:/app
   
     # Terminal
-    stdin_open: true 
+    stdin_open: true
     tty: true 
     depends_on:
       - database
@@ -45,7 +45,7 @@ services:
       - ./frontend:/app
       - /app/node_modules # Prevents overwriting 
     ports:
-      - "8081:8081" # Metro Bundler 
+      - "8081:8081" # Metro Bundler -> React Native Expo
     environment:
       - NODE_ENV=development
       - WATCHPACK_POLLING=true

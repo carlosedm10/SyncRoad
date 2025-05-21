@@ -17,6 +17,15 @@ export default function HomeScreen({ userId }: { userId: number }) {
   const [ahorrado, setAhorrado] = useState(0);
   const [kmOptimizados, setKmOptimizados] = useState(0);
   const translateX = useRef(new Animated.Value(0)).current;
+  const [driverLocation, setDriverLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+  const [followerLocation, setFollowerLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+  const [userName, setUserName] = useState<string>("Jorge");
 
   useEffect(() => {
     if (screen === "home") {
@@ -88,6 +97,9 @@ export default function HomeScreen({ userId }: { userId: number }) {
         <TouchableOpacity style={styles.followerButton}>
           <Text style={styles.followerText}>Follower</Text>
         </TouchableOpacity>
+        <View style={styles.mapContainer}>
+          <MapComponent />
+        </View>
         <View style={styles.waitingContent}>
           <TouchableOpacity
             style={styles.searchButton}
@@ -107,6 +119,10 @@ export default function HomeScreen({ userId }: { userId: number }) {
         <TouchableOpacity style={styles.followerButton}>
           <Text style={styles.followerText}>Follower</Text>
         </TouchableOpacity>
+
+        <View style={styles.mapContainer}>
+          <MapComponent />
+        </View>
 
         <View style={styles.waitingContent}>
           <Text style={styles.mainText}>Buscando guías cercanos...</Text>
@@ -141,7 +157,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
             <TouchableOpacity
               style={styles.yesButton}
               onPress={async () => {
-                const response = await updateDriver(userId, true, false);
+                const response = await updateDriver(userId, false, true);
                 if (response?.updated) {
                   setScreen("home3");
                 } else {
@@ -171,7 +187,11 @@ export default function HomeScreen({ userId }: { userId: number }) {
           <Text style={styles.followerText}>Follower</Text>
         </TouchableOpacity>
         <View style={styles.mapContainer}>
-          <MapComponent />
+          <MapComponent
+            driverLocation={driverLocation}
+            followerLocation={followerLocation}
+            userName={userName}
+          />
         </View>
         <TouchableOpacity
           style={styles.endButton}
@@ -179,6 +199,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
             setScreen("home0"); // ✅ FINALIZA Y VUELVE A PANTALLA 0
             setAhorrado(0);
             setKmOptimizados(0);
+            updateDriver(userId, false, false);
           }}
         >
           <Text style={styles.endButtonText}>Finalizar trayecto</Text>
@@ -229,6 +250,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingBottom: 60,
+    marginTop: 20,
   },
   mainText: {
     fontSize: 16,
@@ -365,7 +387,7 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     paddingHorizontal: 120,
     borderRadius: 20,
-    marginBottom: -450,
+    marginBottom: 0,
   },
   searchButtonText: {
     color: "#fff",
