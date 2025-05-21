@@ -5,14 +5,15 @@ interface StaticMapComponentProps {
   imageSource: any; // require('path/to/image.png')
   imageWidth: number;
   imageHeight: number;
-  userLocation: {
+  minLat: number;      // 39.479566 (bottom left)
+  maxLat: number;      // 39.480051 (top right)
+  minLng: number;      // -0.343956 (bottom left)
+  maxLng: number;      // -0.342979 (top right)
+  userLocation?: {
     lat: number;
     lng: number;
   } | null;
-    minLat: number;
-    maxLat: number;
-    minLng: number;
-    maxLng: number;
+  // ...add more props if needed...
 }
 
 const StaticMapComponent: React.FC<StaticMapComponentProps> = ({
@@ -20,10 +21,10 @@ const StaticMapComponent: React.FC<StaticMapComponentProps> = ({
   imageWidth,
   imageHeight,
   userLocation,
-    minLat,
-    maxLat,
-    minLng,
-    maxLng,
+  minLat,
+  maxLat,
+  minLng,
+  maxLng,
 }) => {
   const calculatePixelCoordinates = (latitude: number, longitude: number) => {
     const latRange = maxLat - minLat;

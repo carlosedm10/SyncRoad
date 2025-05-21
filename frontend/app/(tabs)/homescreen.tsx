@@ -106,24 +106,31 @@ export default function HomeScreen({ userId }: { userId: number }) {
   }, [screen]);
 
   // Pantalla 0: Pantalla inicial
-  if (screen === "home0") {
-    return (
-      <View style={styles.container}>
-        <TouchableOpacity style={styles.followerButton}>
-          <Text style={styles.followerText}>Follower</Text>
-        </TouchableOpacity>
-        <View style={styles.mapContainer}>
-          <StaticMapComponent
-            imageSource={require("../../assets/images/map.png")} // Replace with your image path
-            imageWidth={400} // Replace with your image width
-            imageHeight={300} // Replace with your image height
-            userLocation={userLocation}
-            minLat={-34.6175} // Minimum latitude of the map image
-            maxLat={-34.5875} // Maximum latitude of the map image
-            minLng={-58.4500} // Minimum longitude of the map image
-            maxLng={-58.4000} // Maximum longitude of the map image
-          />
-        </View>
+  return (
+    <View style={styles.container}>
+      <TouchableOpacity style={styles.followerButton}>
+        <Text style={styles.followerText}>Follower</Text>
+      </TouchableOpacity>
+      <View style={styles.mapContainer}>
+        <StaticMapComponent
+          imageSource={require("../../assets/images/Mapa Antenas.png")}
+          imageWidth={400}
+          imageHeight={380}
+          minLat={39.479566}
+          maxLat={39.480051}
+          minLng={-0.343956}
+          maxLng={-0.342979}
+          markers={[
+            {
+              lat: 39.479795,
+              lng: -0.343126,
+              style: styles.mapMarker
+            }
+          ]}
+        />
+      </View>
+
+      {screen === "home0" && (
         <View style={styles.waitingContent}>
           <TouchableOpacity
             style={styles.searchButton}
@@ -132,18 +139,9 @@ export default function HomeScreen({ userId }: { userId: number }) {
             <Text style={styles.searchButtonText}>Buscar guía</Text>
           </TouchableOpacity>
         </View>
-      </View>
-    );
-  }
+      )}
 
-  // Pantalla 1: Esperando guía
-  if (screen === "home") {
-    return (
-      <View style={styles.container}>
-        <TouchableOpacity style={styles.followerButton}>
-          <Text style={styles.followerText}>Follower</Text>
-        </TouchableOpacity>
-
+      {screen === "home" && (
         <View style={styles.waitingContent}>
           <Text style={styles.mainText}>Buscando guías cercanos...</Text>
           <Animated.Image
@@ -152,29 +150,9 @@ export default function HomeScreen({ userId }: { userId: number }) {
             resizeMode="contain"
           />
         </View>
-      </View>
-    );
-  }
+      )}
 
-  // Pantalla 2: ¿Quieres seguirle?
-  if (screen === "home2") {
-    return (
-      <View style={styles.container}>
-        <TouchableOpacity style={styles.followerButton}>
-          <Text style={styles.followerText}>Follower</Text>
-        </TouchableOpacity>
-        <View style={styles.mapContainer}>
-          <StaticMapComponent
-            imageSource={require("../../assets/images/map.png")} // Replace with your image path
-            imageWidth={400} // Replace with your image width
-            imageHeight={300} // Replace with your image height
-            userLocation={userLocation}
-            minLat={-34.6175} // Minimum latitude of the map image
-            maxLat={-34.5875} // Maximum latitude of the map image
-            minLng={-58.4500} // Minimum longitude of the map image
-            maxLng={-58.4000} // Maximum longitude of the map image
-          />
-        </View>
+      {screen === "home2" && (
         <View style={styles.infoBox}>
           <Text style={styles.infoText}>
             Hemos encontrado al guía{"\n"}
@@ -204,71 +182,55 @@ export default function HomeScreen({ userId }: { userId: number }) {
             </TouchableOpacity>
           </View>
         </View>
-      </View>
-    );
-  }
+      )}
 
-  // Pantalla 3: Siguiendo al guía
-  if (screen === "home3") {
-    return (
-      <View style={styles.container}>
-        <TouchableOpacity style={styles.followerButton}>
-          <Text style={styles.followerText}>Follower</Text>
-        </TouchableOpacity>
-        <View style={styles.mapContainer}>
-          <StaticMapComponent
-            imageSource={require("../../assets/images/map.png")} // Replace with your image path
-            imageWidth={400} // Replace with your image width
-            imageHeight={300} // Replace with your image height
-            userLocation={userLocation}
-            minLat={-34.6175} // Minimum latitude of the map image
-            maxLat={-34.5875} // Maximum latitude of the map image
-            minLng={-58.4500} // Minimum longitude of the map image
-            maxLng={-58.4000} // Maximum longitude of the map image
-          />
-        </View>
-        <TouchableOpacity
-          style={styles.endButton}
-          onPress={() => {
-            setScreen("home0"); // ✅ FINALIZA Y VUELVE A PANTALLA 0
-            setAhorrado(0);
-            setKmOptimizados(0);
-          }}
-        >
-          <Text style={styles.endButtonText}>Finalizar trayecto</Text>
-        </TouchableOpacity>
+      {screen === "home3" && (
+        <>
+          <TouchableOpacity
+            style={styles.endButton}
+            onPress={() => {
+              setScreen("home0"); // ✅ FINALIZA Y VUELVE A PANTALLA 0
+              setAhorrado(0);
+              setKmOptimizados(0);
+            }}
+          >
+            <Text style={styles.endButtonText}>Finalizar trayecto</Text>
+          </TouchableOpacity>
 
-        <Text style={styles.followingText}>Siguiendo a Platooning....</Text>
+          <Text style={styles.followingText}>Siguiendo a Platooning....</Text>
 
-        <View style={styles.infoBox}>
-          <View style={styles.statsContainer}>
-            <View style={styles.statItem}>
-              <View style={styles.circle}>
-                <Text style={styles.circleText}>{ahorrado}</Text>
+          <View style={styles.infoBox}>
+            <View style={styles.statsContainer}>
+              <View style={styles.statItem}>
+                <View style={styles.circle}>
+                  <Text style={styles.circleText}>{ahorrado}</Text>
+                </View>
+                <Text style={styles.statLabel}>Euros ahorrados</Text>
               </View>
-              <Text style={styles.statLabel}>Euros ahorrados</Text>
-            </View>
-            <View style={styles.statItem}>
-              <View style={styles.circle}>
-                <Text style={styles.circleText}>{kmOptimizados}</Text>
+              <View style={styles.statItem}>
+                <View style={styles.circle}>
+                  <Text style={styles.circleText}>{kmOptimizados}</Text>
+                </View>
+                <Text style={styles.statLabel}>Km optimizados</Text>
               </View>
-              <Text style={styles.statLabel}>Km optimizados</Text>
             </View>
           </View>
-        </View>
-      </View>
-    );
-  }
-
-  return null;
+        </>
+      )}
+    </View>
+  );
 }
 
 // 🎨 ESTILOS
 const styles = StyleSheet.create({
   mapContainer: {
     width: "100%",
-    height: 350,
-    marginTop: 60,
+    height: 400,
+    marginTop: 30,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+    backgroundColor: 'transparent',
   },
   container: {
     flex: 1,
@@ -279,10 +241,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   waitingContent: {
-    flex: 1,
-    justifyContent: "center",
+    position: "absolute",
+    bottom: 20,
+    width: "100%",
     alignItems: "center",
-    paddingBottom: 60,
   },
   mainText: {
     fontSize: 16,
@@ -419,11 +381,18 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     paddingHorizontal: 120,
     borderRadius: 20,
-    marginBottom: -450,
   },
   searchButtonText: {
     color: "#fff",
     fontWeight: "bold",
     fontSize: 16,
+  },
+  mapMarker: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: 'red',
+    borderWidth: 2,
+    borderColor: 'white',
   },
 });
