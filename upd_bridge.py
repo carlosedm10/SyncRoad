@@ -2,8 +2,9 @@
 
 import socket, threading, time
 
-PI_IP = "10.42.0.1"
-MAC_IP = "10.236.19.37"
+PI_RECEIVER = "10.42.0.0"
+PI_SENDER = "10.42.0.1"
+MAC_IP = "10.42.0.251"
 
 # Incoming from Pi
 MAC_PORT_FROM_PI = 5004
@@ -13,7 +14,7 @@ DOCKER_PORT_HOST = 5005
 # Incoming from Docker
 MAC_PORT_FROM_DOCKER = 5006
 # Outgoing to Pi
-PI_PORT_RECV = 5004
+PI_PORT = 5004
 
 # 1) Socket to receive GPS from Pi
 sock_pi = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -42,8 +43,8 @@ def forward_docker_to_pi():
         data, _ = sock_docker.recvfrom(4096)
         print(f"\n⟵ Docker → Mac on {MAC_PORT_FROM_DOCKER}: {data!r}")
         # forward back to the Pi
-        sock_out.sendto(data, (PI_IP, PI_PORT_RECV))
-        print(f"⟶ Mac → Pi at {PI_IP}:{PI_PORT_RECV}")
+        sock_out.sendto(data, (PI_SENDER, PI_PORT))
+        print(f"⟶ Mac → Pi at {PI_SENDER}:{PI_PORT}")
         time.sleep(1)
 
 

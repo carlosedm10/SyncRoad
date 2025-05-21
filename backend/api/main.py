@@ -226,7 +226,12 @@ def update_link_session(user_data: LinkData, db: Session = Depends(get_db)):
             user.drive_session_id = None
 
     # Send the UDP update, commit everything once
-    udp_sender(user_data.linked)
+    if user_data.linked:
+        message = "START"
+    else:
+        message = "STOP"
+    udp_sender(message)
+
     db.commit()
     db.refresh(user)
 
