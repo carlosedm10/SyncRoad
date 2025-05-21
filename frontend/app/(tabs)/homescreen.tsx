@@ -10,6 +10,29 @@ import {
 import { getPosition, updateDriver } from "./routing";
 import MapComponent from "@/components/Maps";
 
+// ✅ Función Haversine manual
+function getDistanceInMeters(
+  coord1: { latitude: number; longitude: number },
+  coord2: { latitude: number; longitude: number },
+): number {
+  const R = 6371000; // Radio de la Tierra en metros
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+
+  const dLat = toRad(coord2.latitude - coord1.latitude);
+  const dLon = toRad(coord2.longitude - coord1.longitude);
+
+  const lat1 = toRad(coord1.latitude);
+  const lat2 = toRad(coord2.latitude);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c;
+}
+
 export default function HomeScreen({ userId }: { userId: number }) {
   const [screen, setScreen] = useState<"home0" | "home" | "home2" | "home3">(
     "home0",
@@ -26,6 +49,11 @@ export default function HomeScreen({ userId }: { userId: number }) {
     lng: number;
   } | null>(null);
   const [userName, setUserName] = useState<string>("Jorge");
+
+  const lastPosRef = useRef<{ latitude: number; longitude: number } | null>(
+    null,
+  );
+  const accumulatedMeters = useRef(0);
 
   useEffect(() => {
     if (screen === "home") {
@@ -59,38 +87,45 @@ export default function HomeScreen({ userId }: { userId: number }) {
     return () => clearInterval(interval);
   }, [screen, userId]);
 
+  // 🔁 Lógica del contador real con posiciones
   useEffect(() => {
     if (screen !== "home3") return;
 
-    const interval = setInterval(() => {
-      setAhorrado((prev) => prev + 1);
-      setKmOptimizados((prev) => prev + 1);
-    }, 60000);
+    const interval = setInterval(async () => {
+      const data = await getPosition(1);
+
+      if (data?.latitude && data?.longitude) {
+        const current = { latitude: data.latitude, longitude: data.longitude };
+
+        if (lastPosRef.current) {
+          const dist = getDistanceInMeters(lastPosRef.current, current);
+          accumulatedMeters.current += dist;
+
+          if (accumulatedMeters.current >= 5) {
+            const addedKm = Math.floor(accumulatedMeters.current / 5);
+            setKmOptimizados((prev) => {
+              const newKm = prev + addedKm;
+
+              const eurosExtra = Math.floor(newKm / 3) - Math.floor(prev / 3);
+              if (eurosExtra > 0) {
+                setAhorrado((prevE) => prevE + eurosExtra);
+              }
+
+              return newKm;
+            });
+
+            accumulatedMeters.current %= 5;
+          }
+        }
+
+        lastPosRef.current = current;
+      }
+    }, 5000);
 
     return () => clearInterval(interval);
-  }, [screen]);
+  }, [screen, userId]);
 
-  useEffect(() => {
-    if (screen !== "home3") return;
-
-    const euroInterval = setInterval(() => {
-      setAhorrado((prev) => prev + 1);
-    }, 8000);
-
-    return () => clearInterval(euroInterval);
-  }, [screen]);
-
-  useEffect(() => {
-    if (screen !== "home3") return;
-
-    const kmInterval = setInterval(() => {
-      setKmOptimizados((prev) => prev + 1);
-    }, 2000);
-
-    return () => clearInterval(kmInterval);
-  }, [screen]);
-
-  // Pantalla 0: Pantalla inicial
+  // UI PANTALLAS
   if (screen === "home0") {
     return (
       <View style={styles.container}>
@@ -112,18 +147,15 @@ export default function HomeScreen({ userId }: { userId: number }) {
     );
   }
 
-  // Pantalla 1: Esperando guía
   if (screen === "home") {
     return (
       <View style={styles.container}>
         <TouchableOpacity style={styles.followerButton}>
           <Text style={styles.followerText}>Follower</Text>
         </TouchableOpacity>
-
         <View style={styles.mapContainer}>
           <MapComponent />
         </View>
-
         <View style={styles.waitingContent}>
           <Text style={styles.mainText}>Buscando guías cercanos...</Text>
           <Animated.Image
@@ -136,7 +168,6 @@ export default function HomeScreen({ userId }: { userId: number }) {
     );
   }
 
-  // Pantalla 2: ¿Quieres seguirle?
   if (screen === "home2") {
     return (
       <View style={styles.container}>
@@ -157,7 +188,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
             <TouchableOpacity
               style={styles.yesButton}
               onPress={async () => {
-                const response = await updateDriver(userId, false, true);
+                const response = await updateDriver(userId, true, false);
                 if (response?.updated) {
                   setScreen("home3");
                 } else {
@@ -169,7 +200,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.noButton}
-              onPress={() => setScreen("home0")} // ✅ CAMBIADO A PANTALLA 0
+              onPress={() => setScreen("home0")}
             >
               <Text style={styles.buttonLabel}>NO</Text>
             </TouchableOpacity>
@@ -179,7 +210,6 @@ export default function HomeScreen({ userId }: { userId: number }) {
     );
   }
 
-  // Pantalla 3: Siguiendo al guía
   if (screen === "home3") {
     return (
       <View style={styles.container}>
@@ -196,10 +226,11 @@ export default function HomeScreen({ userId }: { userId: number }) {
         <TouchableOpacity
           style={styles.endButton}
           onPress={() => {
-            setScreen("home0"); // ✅ FINALIZA Y VUELVE A PANTALLA 0
+            setScreen("home0");
             setAhorrado(0);
             setKmOptimizados(0);
-            updateDriver(userId, false, false);
+            accumulatedMeters.current = 0;
+            lastPosRef.current = null;
           }}
         >
           <Text style={styles.endButtonText}>Finalizar trayecto</Text>
@@ -230,7 +261,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
   return null;
 }
 
-// 🎨 ESTILOS
+// 🎨 ESTILOS (puedes mantener los tuyos sin cambios)
 const styles = StyleSheet.create({
   mapContainer: {
     width: "100%",
