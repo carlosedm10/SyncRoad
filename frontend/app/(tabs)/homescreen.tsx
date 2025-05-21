@@ -132,7 +132,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
         <TouchableOpacity style={styles.followerButton}>
           <Text style={styles.followerText}>Follower</Text>
         </TouchableOpacity>
-        <View style={styles.mapContainer}>
+        <View style={[styles.mapContainer, styles.centered]}>
           <MapComponent screen={undefined} />
         </View>
         <View style={styles.waitingContent}>
@@ -264,9 +264,11 @@ export default function HomeScreen({ userId }: { userId: number }) {
 // 🎨 ESTILOS (puedes mantener los tuyos sin cambios)
 const styles = StyleSheet.create({
   mapContainer: {
-    width: "100%",
+    width: "90%",
     height: 350,
     marginTop: 60,
+    alignSelf: "center",
+    overflow: "hidden",
   },
   container: {
     flex: 1,
@@ -382,7 +384,7 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   followingText: {
-    marginTop: 20,
+    marginTop: -30,
     marginBottom: 20,
     fontSize: 16,
     fontWeight: "bold",
@@ -418,6 +420,7 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     paddingHorizontal: 120,
     borderRadius: 20,
+    alignSelf: "center",
     marginBottom: 0,
   },
   searchButtonText: {
