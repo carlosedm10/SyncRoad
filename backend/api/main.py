@@ -1,34 +1,27 @@
 # main.py
-import asyncio
 from datetime import datetime
-from api.raspberry import udp_listener, udp_sender
 from fastapi import (
     FastAPI,
     Depends,
     HTTPException,
     WebSocket,
-    WebSocketDisconnect,
 )
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
 from passlib.context import CryptContext
-import subprocess
-
 from api.models import (
     Base,
     DriveSession,
     LocationData,
     SessionLocal,
     UserCredentials,
-    DriverData,
-    ConnectionData,
-    WifiCredentials,
+    LinkData,
     engine,
     User,
     Location,
     get_db,
 )
-from sqlalchemy.orm import Session
-
-from fastapi.middleware.cors import CORSMiddleware
+from api.raspberry import udp_listener, udp_sender
 
 # Crear/actualizar tablas en la BD
 Base.metadata.create_all(bind=engine)
@@ -44,7 +37,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "*"
-    ],  # Replace "*" with your frontend's URL in production for security.
+    ],  # TODO: Replace "*" with your frontend's URL in production for security.
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -96,7 +89,7 @@ def create_user(user_data: UserCredentials, db: Session = Depends(get_db)):
 
     try:
         hashed_password = pwd_context.hash(user_data.password)
-        new_user = User(email=user_data.email, password=hashed_password)
+        new_user = User(email=user_data.email, password=hashed_password, driver=False)
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
@@ -128,8 +121,7 @@ def get_user_info(user_id: int, db: Session = Depends(get_db)):
 
 @app.post("/update-location/")  # NOTE: uncomment this for testing in Local
 def update_location(location_data: LocationData, db: Session = Depends(get_db)):
-    """Method that will connect to raspberry pi and update the location of the user"""
-
+    """Method for testing purposes"""
     user = db.query(User).filter(User.id == location_data.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -174,65 +166,74 @@ def get_locations(user_id: int, db: Session = Depends(get_db)):
     }
 
 
-@app.post("/update-driver/")
-def update_driver(driver_data: DriverData, db: Session = Depends(get_db)):
-    """Updates the drivers preferences when the user clicks the buttons"""
-    user = db.query(User).filter(User.id == driver_data.user_id).first()
+@app.post("/update-link-session/")
+def update_link_session(user_data: LinkData, db: Session = Depends(get_db)):
+    """Updates the user's preferences for the platooning session."""
+    # 1. Load user
+    user = db.query(User).filter(User.id == user_data.user_id).first()
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    try:
-        user.driver = driver_data.driver
-        if driver_data.linked:
-            if user.drive_session_id is None and driver_data.driver is False:
-                # add user to existing session
-                session = db.query(DriveSession).first()
-                if session:
-                    user.drive_session_id = session.id
-                    session.participants.append(user)
-                else:
-                    raise HTTPException(
-                        status_code=404, detail="No active drive session found"
-                    )
-            elif user.drive_session_id is None and driver_data.driver is True:
-                # Create a new DriveSession
-                new_session = DriveSession(
-                    token=f"session-{user.id}-{datetime.utcnow().timestamp()}",
-                    driver_id=user.id if driver_data.driver else None,
+        raise HTTPException(404, "User not found")
+
+    # 2. Set driver flag on the user record
+    user.driver = user_data.driver
+
+    if user_data.linked:
+        # --- Linking logic ---
+        if user.drive_session_id is None:
+            # a) Try to join an existing session where they're already a participant
+            session = (
+                db.query(DriveSession)
+                .filter(DriveSession.participants.any(User.id == user.id))
+                .first()
+            )
+            if not session:
+                # b) No session found → create one with the default driver (user 2)
+                default_driver = db.query(User).get(2)
+                if not default_driver:
+                    raise HTTPException(404, "Default driver (ID=2) not found")
+
+                session = DriveSession(
+                    token=f"session-{default_driver.id}-{datetime.utcnow().timestamp()}",
+                    driver_id=default_driver.id,
                 )
-                db.add(new_session)
-                db.commit()
-                user.drive_session_id = new_session.id
-            else:
-                # Update driver in existing session if needed
-                session = (
-                    db.query(DriveSession).filter_by(id=user.drive_session_id).first()
-                )
-                if session and driver_data.driver:
-                    session.driver_id = user.id
+                db.add(session)
+                db.flush()  # to assign session.id
+
+            # c) Whether found or newly created, add this follower
+            user.drive_session_id = session.id
+            if user not in session.participants:
+                session.participants.append(user)
+
         else:
-            # If user is linked to a session but now wants to unlink, delete the session
-            if user.drive_session_id:
-                session = (
-                    db.query(DriveSession).filter_by(id=user.drive_session_id).first()
-                )
-                if session:
-                    # Unlink all users connected to this session
-                    users_in_session = (
-                        db.query(User).filter_by(drive_session_id=session.id).all()
-                    )
-                    for u in users_in_session:
-                        u.drive_session_id = None
-                    db.delete(session)
-        udp_sender(driver_data.linked)
-        db.commit()
-        db.refresh(user)
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+            # Already in a session → (optionally) you could ensure the driver hasn't changed
+            session = db.query(DriveSession).get(user.drive_session_id)
+            if not session:
+                # Weird: they had an ID but no session exists
+                raise HTTPException(404, "Previously linked session not found")
+
+            # If somehow they flipped to `driver=True` you could reassign,
+            # but since this user is always follower, we do nothing here.
+
+    else:
+        # --- Unlinking logic ---
+        if user.drive_session_id:
+            session = db.query(DriveSession).get(user.drive_session_id)
+            if session:
+                # Unlink *all* participants and delete session
+                for u in session.participants:
+                    u.drive_session_id = None
+                db.delete(session)
+            user.drive_session_id = None
+
+    # Send the UDP update, commit everything once
+    udp_sender(user_data.linked)
+    db.commit()
+    db.refresh(user)
+
     return {
         "user_id": user.id,
         "updated": True,
-        "linked": driver_data.linked,
+        "linked": user_data.linked,
         "drive_session_id": user.drive_session_id,
     }
 
