@@ -8,7 +8,7 @@ import {
   Alert,
 } from "react-native";
 import { getPosition, updateDriver } from "./routing";
-import MapComponent from "@/components/Maps";
+import StaticMapComponent from "@/components/StaticMapComponent"; // Import the new component
 
 export default function HomeScreen({ userId }: { userId: number }) {
   const [screen, setScreen] = useState<"home0" | "home" | "home2" | "home3">(
@@ -26,6 +26,21 @@ export default function HomeScreen({ userId }: { userId: number }) {
     lng: number;
   } | null>(null);
   const [userName, setUserName] = useState<string>("Jorge");
+  const [userLocation, setUserLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+
+  useEffect(() => {
+    const getUserLocation = async () => {
+      const position = await getPosition(userId);
+      if (position) {
+        setUserLocation({ lat: position.lat, lng: position.lng });
+      }
+    };
+
+    getUserLocation();
+  }, [userId]);
 
   useEffect(() => {
     if (screen === "home") {
@@ -97,6 +112,18 @@ export default function HomeScreen({ userId }: { userId: number }) {
         <TouchableOpacity style={styles.followerButton}>
           <Text style={styles.followerText}>Follower</Text>
         </TouchableOpacity>
+        <View style={styles.mapContainer}>
+          <StaticMapComponent
+            imageSource={require("../../assets/images/map.png")} // Replace with your image path
+            imageWidth={400} // Replace with your image width
+            imageHeight={300} // Replace with your image height
+            userLocation={userLocation}
+            minLat={-34.6175} // Minimum latitude of the map image
+            maxLat={-34.5875} // Maximum latitude of the map image
+            minLng={-58.4500} // Minimum longitude of the map image
+            maxLng={-58.4000} // Maximum longitude of the map image
+          />
+        </View>
         <View style={styles.waitingContent}>
           <TouchableOpacity
             style={styles.searchButton}
@@ -137,7 +164,16 @@ export default function HomeScreen({ userId }: { userId: number }) {
           <Text style={styles.followerText}>Follower</Text>
         </TouchableOpacity>
         <View style={styles.mapContainer}>
-          <MapComponent />
+          <StaticMapComponent
+            imageSource={require("../../assets/images/map.png")} // Replace with your image path
+            imageWidth={400} // Replace with your image width
+            imageHeight={300} // Replace with your image height
+            userLocation={userLocation}
+            minLat={-34.6175} // Minimum latitude of the map image
+            maxLat={-34.5875} // Maximum latitude of the map image
+            minLng={-58.4500} // Minimum longitude of the map image
+            maxLng={-58.4000} // Maximum longitude of the map image
+          />
         </View>
         <View style={styles.infoBox}>
           <Text style={styles.infoText}>
@@ -180,10 +216,15 @@ export default function HomeScreen({ userId }: { userId: number }) {
           <Text style={styles.followerText}>Follower</Text>
         </TouchableOpacity>
         <View style={styles.mapContainer}>
-          <MapComponent
-            driverLocation={driverLocation}
-            followerLocation={followerLocation}
-            userName={userName}
+          <StaticMapComponent
+            imageSource={require("../../assets/images/map.png")} // Replace with your image path
+            imageWidth={400} // Replace with your image width
+            imageHeight={300} // Replace with your image height
+            userLocation={userLocation}
+            minLat={-34.6175} // Minimum latitude of the map image
+            maxLat={-34.5875} // Maximum latitude of the map image
+            minLng={-58.4500} // Minimum longitude of the map image
+            maxLng={-58.4000} // Maximum longitude of the map image
           />
         </View>
         <TouchableOpacity
