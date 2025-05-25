@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
-  View,
   Text,
   TextInput,
   StyleSheet,
@@ -8,7 +7,6 @@ import {
   Image,
   ScrollView,
   TouchableWithoutFeedback,
-  Keyboard,
 } from "react-native";
 import { User } from "./types";
 import { loginUser } from "./routing";
@@ -115,7 +113,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   signInButton: {
-    backgroundColor: "#001F54", // Updated to navy blue
+    backgroundColor: "#001F54",
     paddingVertical: 15,
     paddingHorizontal: 30,
     borderRadius: 10,
@@ -124,7 +122,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   signInButtonText: {
-    color: "#FFF", // Text color for the button
+    color: "#FFF",
     fontSize: 16,
     fontWeight: "bold",
   },

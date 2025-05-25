@@ -1,4 +1,4 @@
-# Use the official Python image
+# Official Python image
 FROM python:3.11
 
 # Set the working directory inside the container

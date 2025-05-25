@@ -112,8 +112,8 @@ export default function HomeScreen({ userId }: { userId: number }) {
           const dist = getDistanceInMeters(lastPosRef.current, current);
           accumulatedMeters.current += dist;
 
-          if (accumulatedMeters.current >= 5) {
-            const addedKm = Math.floor(accumulatedMeters.current / 5);
+          if (accumulatedMeters.current >= 1) {
+            const addedKm = Math.floor(accumulatedMeters.current / 1);
             setKmOptimizados((prev) => {
               const newKm = prev + addedKm;
 
@@ -125,7 +125,7 @@ export default function HomeScreen({ userId }: { userId: number }) {
               return newKm;
             });
 
-            accumulatedMeters.current %= 5;
+            accumulatedMeters.current %= 1;
           }
         }
 
