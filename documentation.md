@@ -4,6 +4,7 @@
 ## 📌 GitHub (**Synchronizing** code)
 
 ### If you're starting a new task:
+
 1. Open your terminal and run:
    ```bash
    git checkout main
@@ -17,6 +18,7 @@
    ```
 
 ### If you're continuing a task:
+
 1. Make sure you're on your branch:
    ```bash
    git branch
@@ -33,6 +35,7 @@ git push
 ```
 
 ### When the task is finished – Create a PR:
+
 1. Go to [GitHub repository](https://github.com/carlosedm10/SyncRoad)
 2. Create a Pull Request
 3. Make sure your branch is up to date. If there are conflicts, contact an admin.
@@ -65,6 +68,7 @@ git push
 ## 📦 Imports (Adding new libraries)
 
 ### Backend:
+
 ```bash
 make connect-to-backend
 poetry add package_name
@@ -73,6 +77,7 @@ make build
 ```
 
 ### Frontend:
+
 ```bash
 npm install "name-of-the-library"
 make build
